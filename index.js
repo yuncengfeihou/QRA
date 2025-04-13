@@ -4,7 +4,7 @@ import * as Constants from './constants.js';
 import { sharedState } from './state.js';
 import { createMenuElement, updateIconDisplay } from './ui.js';
 import { createSettingsHtml, loadAndApplySettings } from './settings.js';
-import { setupEventListeners } from './events.js';
+import { setupEventListeners, handleQuickReplyClick } from './events.js';
 
 /**
  * Injects the rocket button next to the send button
@@ -50,6 +50,11 @@ function initializePlugin() {
     sharedState.domElements.customIconUrl = document.getElementById(Constants.ID_CUSTOM_ICON_URL);
     sharedState.domElements.colorMatchCheckbox = document.getElementById(Constants.ID_COLOR_MATCH_CHECKBOX);
 
+    // 创建全局对象以暴露事件处理函数，解决循环依赖问题
+    window.quickReplyMenu = {
+        handleQuickReplyClick
+    };
+
     // Append menu to the body
     document.body.appendChild(menu);
 
@@ -62,17 +67,27 @@ function initializePlugin() {
     console.log(`[${Constants.EXTENSION_NAME}] Initialization complete.`);
 }
 
-
 // --- SillyTavern Extension Entry Point ---
 jQuery(async () => {
-    // 1. Ensure base settings object exists
-    extension_settings[Constants.EXTENSION_NAME] = extension_settings[Constants.EXTENSION_NAME] || {};
+    try {
+        // 1. Ensure base settings object exists
+        if (typeof extension_settings === 'undefined') {
+            console.warn(`[${Constants.EXTENSION_NAME}] extension_settings 对象不存在，创建本地对象`);
+            window.extension_settings = window.extension_settings || {};
+            window.extension_settings[Constants.EXTENSION_NAME] = {};
+        }
 
-    // 2. Add settings panel HTML to the UI
-    //    (This needs to happen before initializePlugin tries to find the dropdown)
-    $('#extensions_settings').append(createSettingsHtml());
+        // 2. Add settings panel HTML to the UI
+        const settingsContainer = $('#extensions_settings');
+        if (settingsContainer.length === 0) {
+            console.warn(`[${Constants.EXTENSION_NAME}] 未找到设置容器，添加到body`);
+            $('body').append('<div id="extensions_settings" style="display:none"></div>');
+        }
+        $('#extensions_settings').append(createSettingsHtml());
 
-    // 3. Initialize the core plugin logic
-    //    (This will create elements, find the dropdown, load settings, and set listeners)
-    initializePlugin();
+        // 3. Initialize the core plugin logic
+        initializePlugin();
+    } catch (err) {
+        console.error(`[${Constants.EXTENSION_NAME}] 初始化失败:`, err);
+    }
 });
