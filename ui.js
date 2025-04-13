@@ -138,6 +138,56 @@ export function renderQuickReplies(chatReplies, globalReplies) {
     }
 }
 
+export function updateIconDisplay() {
+    const button = sharedState.domElements.rocketButton;
+    if (!button) return;
+    
+    const settings = extension_settings[Constants.EXTENSION_NAME];
+    const iconType = settings.iconType || Constants.ICON_TYPES.ROCKET;
+    
+    // 清除按钮内容
+    button.innerHTML = '';
+    button.className = 'interactable secondary-button';
+    
+    // 如果是自定义图标，使用图片元素
+    if (iconType === Constants.ICON_TYPES.CUSTOM && settings.customIconUrl) {
+        const img = document.createElement('img');
+        img.src = settings.customIconUrl;
+        img.alt = '快速回复';
+        img.style.maxHeight = '20px';
+        img.style.maxWidth = '20px';
+        button.appendChild(img);
+    } else {
+        // 使用FontAwesome图标
+        const iconClass = Constants.ICON_CLASS_MAP[iconType] || Constants.ICON_CLASS_MAP[Constants.ICON_TYPES.ROCKET];
+        button.classList.add('fa-solid', iconClass);
+    }
+    
+    // 应用颜色匹配设置
+    if (settings.matchButtonColors) {
+        // 从发送按钮获取CSS变量并应用到我们的按钮
+        const sendButton = document.getElementById('send_but');
+        if (sendButton) {
+            // 获取计算后的样式
+            const sendButtonStyle = getComputedStyle(sendButton);
+            
+            // 应用颜色和背景色
+            button.style.setProperty('--accent-color', sendButtonStyle.getPropertyValue('--accent-color'));
+            button.style.setProperty('--accent-color-hover', sendButtonStyle.getPropertyValue('--accent-color-hover'));
+            button.style.setProperty('--accent-color-active', sendButtonStyle.getPropertyValue('--accent-color-active'));
+            
+            // 直接匹配发送按钮的颜色
+            button.style.color = sendButtonStyle.color;
+            
+            // 添加额外的CSS类以匹配发送按钮
+            if (sendButton.classList.contains('primary-button')) {
+                button.classList.remove('secondary-button');
+                button.classList.add('primary-button');
+            }
+        }
+    }
+}
+
 /**
  * Updates the visibility of the menu UI and related ARIA attributes based on sharedState.
  */
