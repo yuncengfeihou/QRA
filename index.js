@@ -18,18 +18,6 @@ if (!window.extension_settings[Constants.EXTENSION_NAME]) {
     };
 }
 
-// 导出设置对象以便其他模块使用
-export const extension_settings = window.extension_settings;
-
-function onReady(callback) {
-    if (typeof jQuery !== 'undefined') {
-        jQuery(callback);
-    } else if (document.readyState === "complete" || document.readyState === "interactive") {
-        setTimeout(callback, 1);
-    } else {
-        document.addEventListener("DOMContentLoaded", callback);
-    }
-}
 
 /**
  * Injects the rocket button next to the send button
@@ -163,6 +151,8 @@ function updateIconPreview(iconType) {
  * Initializes the plugin: creates UI, sets up listeners, loads settings.
  */
 // index.js - 需要修改的部分
+// index.js - 只修改以下函数，保留文件中的其他内容
+
 function initializePlugin() {
     try {
         console.log(`[${Constants.EXTENSION_NAME}] Initializing...`);
@@ -173,16 +163,14 @@ function initializePlugin() {
         // Create menu element
         const menu = createMenuElement();
 
+        // Append menu to the body (先添加到DOM)
+        document.body.appendChild(menu);
+
         // Store references in shared state
         sharedState.domElements.rocketButton = rocketButton;
         sharedState.domElements.menu = menu;
         sharedState.domElements.chatItemsContainer = menu.querySelector(`#${Constants.ID_CHAT_ITEMS}`);
         sharedState.domElements.globalItemsContainer = menu.querySelector(`#${Constants.ID_GLOBAL_ITEMS}`);
-        
-        // Append menu to the body
-        document.body.appendChild(menu);
-        
-        // 确保先将DOM元素添加到document中，再获取设置元素的引用
         sharedState.domElements.settingsDropdown = document.getElementById(Constants.ID_SETTINGS_ENABLED_DROPDOWN);
         sharedState.domElements.iconTypeDropdown = document.getElementById(Constants.ID_ICON_TYPE_DROPDOWN);
         sharedState.domElements.customIconUrl = document.getElementById(Constants.ID_CUSTOM_ICON_URL);
@@ -193,15 +181,30 @@ function initializePlugin() {
             handleQuickReplyClick
         };
 
-        // Load settings and apply UI
-        loadAndApplySettings();
+        // 确保先加载DOM元素再设置事件监听
+        setTimeout(() => {
+            // Load settings and apply UI
+            loadAndApplySettings();
 
-        // Setup event listeners
-        setupEventListeners();
+            // Setup event listeners
+            setupEventListeners();
+            
+            console.log(`[${Constants.EXTENSION_NAME}] Initialization complete.`);
+        }, 100);
 
-        console.log(`[${Constants.EXTENSION_NAME}] Initialization complete.`);
     } catch (err) {
         console.error(`[${Constants.EXTENSION_NAME}] 初始化失败:`, err);
+    }
+}
+
+// 确保 jQuery 可用 - 使用原生 js 备用
+function onReady(callback) {
+    if (typeof jQuery !== 'undefined') {
+        jQuery(callback);
+    } else if (document.readyState === "complete" || document.readyState === "interactive") {
+        setTimeout(callback, 1);
+    } else {
+        document.addEventListener("DOMContentLoaded", callback);
     }
 }
 
@@ -222,9 +225,29 @@ onReady(() => {
         // 初始化插件
         initializePlugin();
         
-        // 确保文件上传监听器已设置
-        // 这里额外调用一次，确保在DOM加载完成后设置这些监听器
-        setupSettingsEventListeners();
+        // 确保DOM完全加载后再次设置文件上传监听器
+        setTimeout(() => {
+            // 这是一个额外的安全措施，确保文件上传功能正常工作
+            const fileButton = document.getElementById('icon-file-button');
+            const fileInput = document.getElementById('icon-file-upload');
+            
+            if (fileButton && fileInput) {
+                fileButton.onclick = function(e) {
+                    e.preventDefault();
+                    console.log(`[${Constants.EXTENSION_NAME}] 文件按钮被点击 (直接onclick)`);
+                    fileInput.click();
+                };
+            }
+            
+            if (fileInput) {
+                fileInput.onchange = function(e) {
+                    console.log(`[${Constants.EXTENSION_NAME}] 文件已选择 (直接onchange)`, e.target.files[0]?.name || '无文件');
+                    handleFileUpload(e);
+                };
+            }
+            
+            console.log(`[${Constants.EXTENSION_NAME}] 额外的文件上传逻辑已设置`);
+        }, 500);
     } catch (err) {
         console.error(`[${Constants.EXTENSION_NAME}] 启动失败:`, err);
     }
