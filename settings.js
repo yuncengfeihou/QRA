@@ -1,5 +1,5 @@
 // settings.js
-import { extension_settings } from "../../../extensions.js";
+import { extension_settings } from '../../../extensions.js';
 import * as Constants from './constants.js';
 import { sharedState, setMenuVisible } from './state.js';
 import { updateMenuVisibilityUI, updateRocketButtonIcon } from './ui.js'; // Import updateRocketButtonIcon
