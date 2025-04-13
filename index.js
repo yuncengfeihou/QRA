@@ -21,6 +21,16 @@ if (!window.extension_settings[Constants.EXTENSION_NAME]) {
 // 导出设置对象以便其他模块使用
 export const extension_settings = window.extension_settings;
 
+function onReady(callback) {
+    if (typeof jQuery !== 'undefined') {
+        jQuery(callback);
+    } else if (document.readyState === "complete" || document.readyState === "interactive") {
+        setTimeout(callback, 1);
+    } else {
+        document.addEventListener("DOMContentLoaded", callback);
+    }
+}
+
 /**
  * Injects the rocket button next to the send button
  */
