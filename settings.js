@@ -228,7 +228,7 @@ function updateIconPreview(iconType) {
  * 处理文件上传事件
  * @param {Event} event 文件上传事件
  */
-function handleFileUpload(event) {
+export function handleFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
     
