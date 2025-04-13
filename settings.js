@@ -218,6 +218,7 @@ function updateIconPreview(iconType) {
 /**
  * 处理文件上传事件
  * @param {Event} event 文件上传事件
+ */
 function handleFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -226,29 +227,16 @@ function handleFileUpload(event) {
     reader.onload = function(e) {
         const customIconUrl = document.getElementById(Constants.ID_CUSTOM_ICON_URL);
         if (customIconUrl) {
-            const result = e.target.result; // 文件内容 (base64 或 文本)
-            
-            customIconUrl.value = result;
+            customIconUrl.value = e.target.result; // 将文件转为base64
             
             // 更新设置
             const settings = extension_settings[Constants.EXTENSION_NAME];
-            settings.customIconUrl = result;
-            
-            // 确保图标类型设置为自定义
-            settings.iconType = Constants.ICON_TYPES.CUSTOM;
-            const iconTypeDropdown = document.getElementById(Constants.ID_ICON_TYPE_DROPDOWN);
-            if (iconTypeDropdown) {
-                iconTypeDropdown.value = Constants.ICON_TYPES.CUSTOM;
-            }
-            
-            // 显示自定义图标URL输入框
-            const customIconContainer = document.querySelector('.custom-icon-container');
-            if (customIconContainer) {
-                customIconContainer.style.display = 'flex';
-            }
+            settings.customIconUrl = e.target.result;
             
             // 更新预览
-            updateIconPreview(Constants.ICON_TYPES.CUSTOM);
+            if (settings.iconType === Constants.ICON_TYPES.CUSTOM) {
+                updateIconPreview(Constants.ICON_TYPES.CUSTOM);
+            }
             
             // 更新图标显示
             updateIconDisplay();
@@ -257,13 +245,7 @@ function handleFileUpload(event) {
             saveSettings();
         }
     };
-    
-    // 根据文件类型决定如何读取
-    if (file.type === 'image/svg+xml') {
-        reader.readAsText(file); // 读取为文本，这样可以获取SVG代码
-    } else {
-        reader.readAsDataURL(file); // 读取为base64编码
-    }
+    reader.readAsDataURL(file);
 }
 
 // 统一处理设置变更的函数
