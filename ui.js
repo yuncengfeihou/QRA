@@ -2,8 +2,7 @@
 import * as Constants from './constants.js';
 import { fetchQuickReplies } from './api.js';
 import { sharedState } from './state.js';
-// 移除从events导入handleQuickReplyClick，避免循环引用
-
+import { extension_settings } from "./index.js";  
 /**
  * Creates the main quick reply button (legacy, kept for reference).
  * @returns {HTMLElement} The created button element.
