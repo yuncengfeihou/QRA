@@ -1,30 +1,98 @@
-/* 隐藏原有的快捷回复栏 */
+/* QR助手 设置面板中的图标预览 */
+.qr-icon-preview {
+    display: inline-flex; /* Use flex to center content */
+    align-items: center;
+    justify-content: center;
+    width: 24px; /* Adjust size as needed */
+    height: 24px;
+    margin: 0 8px;
+    vertical-align: middle;
+    border: 1px solid var(--border-color, #444); /* Use theme variable */
+    padding: 2px;
+    border-radius: 3px;
+    background-color: var(--input-bg, #333); /* Use theme variable */
+    color: var(--text-color, #ddd); /* Default color for text/FA icon */
+    overflow: hidden; /* Prevent large icons overflowing */
+}
+
+.qr-icon-preview img,
+.qr-icon-preview svg {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block; /* Remove extra space below img */
+}
+.qr-icon-preview svg {
+    fill: currentColor; /* Make preview SVG use text color */
+}
+
+
+/* --- 火箭按钮 (调整以支持不同图标类型) --- */
+#quick-reply-rocket-button {
+    /* Keep existing layout properties */
+    font-size: 1.2em; /* Base size, may be overridden by content */
+    line-height: var(--buttons-bar-height);
+    height: var(--buttons-bar-height);
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center icon */
+    margin-right: 4px;
+    cursor: pointer;
+    transition: color 0.2s, opacity 0.2s; /* Add opacity transition */
+    color: var(--button-secondary-text, #a0a0a0); /* Default color from theme or fallback */
+    width: var(--buttons-bar-height); /* Give it a consistent width */
+    padding: 0; /* Remove padding if any */
+    border: none; /* Remove border if any */
+    background: none; /* Remove background if any */
+    flex-shrink: 0; /* Prevent shrinking */
+}
+
+#quick-reply-rocket-button:hover {
+    color: var(--text-color, #ffffff); /* Hover color from theme or fallback */
+    opacity: 1;
+}
+
+#quick-reply-rocket-button.active {
+    color: var(--accent-color, #55aaff); /* Active color from theme or fallback */
+}
+
+/* --- Default Font Awesome Icon Specifics --- */
+#quick-reply-rocket-button.default-icon {
+    /* Font Awesome might require font-family if not globally set */
+    /* font-family: 'Font Awesome 6 Free'; */
+    /* font-weight: 900; */ /* For solid icons */
+    /* font-size: 1.2em; */ /* Control FA icon size specifically if needed */
+}
+
+/* --- Custom PNG Icon Specifics --- */
+#quick-reply-rocket-button.custom-png-icon img {
+    display: block;
+    width: calc(var(--buttons-bar-height) - 10px); /* Adjust size as needed, leave some padding */
+    height: calc(var(--buttons-bar-height) - 10px);
+    object-fit: contain;
+    /* PNG color cannot be changed via CSS 'color'. Upload colored PNGs. */
+}
+#quick-reply-rocket-button.custom-png-icon:hover img {
+     opacity: 0.85; /* Example hover effect for PNG */
+}
+
+
+/* --- Custom SVG Icon Specifics --- */
+#quick-reply-rocket-button.custom-svg-icon svg {
+    display: block;
+    width: calc(var(--buttons-bar-height) - 8px); /* Adjust size as needed */
+    height: calc(var(--buttons-bar-height) - 8px);
+    /* Crucial: Use currentColor to inherit the button's text color */
+    fill: currentColor;
+}
+
+/* --- 隐藏原有的快捷回复栏 (Keep this) --- */
 #qr--bar {
     height: 0px !important;
     overflow: hidden !important;
 }
 
-/* --- 火箭按钮 --- */
-#quick-reply-rocket-button {
-    color: #a0a0a0; /* 默认颜色：灰色 */
-    font-size: 1.2em; /* 图标大小 */
-    line-height: var(--buttons-bar-height); /* 行高与按钮栏一致 */
-    height: var(--buttons-bar-height);      /* 高度与按钮栏一致 */
-    display: flex;         /* 使用 Flexbox 布局 */
-    align-items: center;   /* 垂直居中图标 */
-    margin-right: 4px;     /* 右边距 */
-    cursor: pointer;       /* 鼠标样式：手型 */
-    transition: color 0.2s;/* 颜色变化过渡效果 */
-}
-
-#quick-reply-rocket-button:hover {
-    color: #ffffff; /* 鼠标悬停时颜色：白色 */
-}
-
-#quick-reply-rocket-button.active {
-    color: #55aaff; /* 菜单打开时的颜色：蓝色 */
-}
-
+/* Rest of your style.css (menu, lists, items etc.) */
 /* 快速回复菜单容器 */
 #quick-reply-menu {
     display: none;
