@@ -1,105 +1,64 @@
-/* QR助手 设置面板中的图标预览 */
-.qr-icon-preview {
-    display: inline-flex; /* Use flex to center content */
-    align-items: center;
-    justify-content: center;
-    width: 24px; /* Adjust size as needed */
-    height: 24px;
-    margin: 0 8px;
-    vertical-align: middle;
-    border: 1px solid var(--border-color, #444); /* Use theme variable */
-    padding: 2px;
-    border-radius: 3px;
-    background-color: var(--input-bg, #333); /* Use theme variable */
-    color: var(--text-color, #ddd); /* Default color for text/FA icon */
-    overflow: hidden; /* Prevent large icons overflowing */
-}
-
-.qr-icon-preview img,
-.qr-icon-preview svg {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    display: block; /* Remove extra space below img */
-}
-.qr-icon-preview svg {
-    fill: currentColor; /* Make preview SVG use text color */
-}
-
-
-/* --- 火箭按钮 (调整以支持不同图标类型) --- */
-#quick-reply-rocket-button {
-    /* Keep existing layout properties */
-    font-size: 1.2em; /* Base size, may be overridden by content */
-    line-height: var(--buttons-bar-height);
-    height: var(--buttons-bar-height);
-    display: flex;
-    align-items: center;
-    justify-content: center; /* Center icon */
-    margin-right: 4px;
-    cursor: pointer;
-    transition: color 0.2s, opacity 0.2s; /* Add opacity transition */
-    color: var(--button-secondary-text, #a0a0a0); /* Default color from theme or fallback */
-    width: var(--buttons-bar-height); /* Give it a consistent width */
-    padding: 0; /* Remove padding if any */
-    border: none; /* Remove border if any */
-    background: none; /* Remove background if any */
-    flex-shrink: 0; /* Prevent shrinking */
-}
-
-#quick-reply-rocket-button:hover {
-    color: var(--text-color, #ffffff); /* Hover color from theme or fallback */
-    opacity: 1;
-}
-
-#quick-reply-rocket-button.active {
-    color: var(--accent-color, #55aaff); /* Active color from theme or fallback */
-}
-
-/* --- Default Font Awesome Icon Specifics --- */
-#quick-reply-rocket-button.default-icon {
-    /* Font Awesome might require font-family if not globally set */
-    /* font-family: 'Font Awesome 6 Free'; */
-    /* font-weight: 900; */ /* For solid icons */
-    /* font-size: 1.2em; */ /* Control FA icon size specifically if needed */
-}
-
-/* --- Custom PNG Icon Specifics --- */
-#quick-reply-rocket-button.custom-png-icon img {
-    display: block;
-    width: calc(var(--buttons-bar-height) - 10px); /* Adjust size as needed, leave some padding */
-    height: calc(var(--buttons-bar-height) - 10px);
-    object-fit: contain;
-    /* PNG color cannot be changed via CSS 'color'. Upload colored PNGs. */
-}
-#quick-reply-rocket-button.custom-png-icon:hover img {
-     opacity: 0.85; /* Example hover effect for PNG */
-}
-
-
-/* --- Custom SVG Icon Specifics --- */
-#quick-reply-rocket-button.custom-svg-icon svg {
-    display: block;
-    width: calc(var(--buttons-bar-height) - 8px); /* Adjust size as needed */
-    height: calc(var(--buttons-bar-height) - 8px);
-    /* Crucial: Use currentColor to inherit the button's text color */
-    fill: currentColor;
-}
-
-/* --- 隐藏原有的快捷回复栏 (Keep this) --- */
+/* 隐藏原有的快捷回复栏 */
 #qr--bar {
     height: 0px !important;
     overflow: hidden !important;
 }
 
-/* Rest of your style.css (menu, lists, items etc.) */
-/* 快速回复菜单容器 */
+/* --- 火箭按钮 (现在支持自定义) --- */
+#quick-reply-rocket-button {
+    /* Use CSS variables set by JS */
+    --qs-icon-color: #a0a0a0; /* Default fallback */
+    --qs-icon-hover-color: #ffffff; /* Default fallback */
+    --qs-icon-active-color: #55aaff; /* Default fallback */
+    --qs-icon-size: 1.2em; /* Default fallback */
+
+    color: var(--qs-icon-color);
+    font-size: var(--qs-icon-size); /* Controls FA icon size and basis for SVG/IMG */
+    width: var(--qs-icon-size);     /* Set width based on font-size */
+    height: var(--buttons-bar-height); /* Keep height aligned with bar */
+    line-height: var(--buttons-bar-height); /* Vertically align FA icon */
+    display: flex;         /* Use Flexbox to center content (SVG, IMG) */
+    align-items: center;   /* Vertical center */
+    justify-content: center;/* Horizontal center */
+    margin-right: 4px;
+    cursor: pointer;
+    transition: color 0.2s;
+    flex-shrink: 0; /* Prevent shrinking if space is tight */
+}
+
+#quick-reply-rocket-button:hover {
+    color: var(--qs-icon-hover-color);
+}
+
+#quick-reply-rocket-button.active {
+    color: var(--qs-icon-active-color);
+}
+
+/* Ensure SVG and IMG within the button behave correctly */
+#quick-reply-rocket-button svg {
+    display: block; /* Remove extra space below SVG */
+    width: 100%;    /* Fill the flex container */
+    height: auto;   /* Maintain aspect ratio */
+    max-height: 90%; /* Prevent overflow */
+    fill: currentColor; /* Inherit color from button */
+}
+
+#quick-reply-rocket-button img {
+    display: block; /* Remove extra space below image */
+    width: 100%;    /* Fill the flex container */
+    height: auto;   /* Maintain aspect ratio */
+    max-height: 90%; /* Prevent overflow */
+    object-fit: contain; /* Ensure image fits without distortion */
+}
+
+
+/* --- 快速回复菜单容器 (保持不变) --- */
 #quick-reply-menu {
     display: none;
     position: fixed;
     left: 50%;
-    top: 190px;
-    transform: translateX(-50%) translateY(10vh);
+    top: 190px; /* Adjust as needed */
+    transform: translateX(-50%) translateY(10vh); /* Adjust as needed */
     z-index: 1001;
     background-color: rgba(0, 0, 0, 0.85);
     border: 1px solid #555;
@@ -110,59 +69,140 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     transition: background-color 0.3s, border-color 0.3s;
 }
+/* ... (其他菜单样式保持不变) ... */
 
-/* 菜单布局 */
-.quick-reply-menu-container {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-/* 左右容器共有样式 */
-.quick-reply-list {
-    width: 48%;
-    border: 1px solid #444;
-    border-radius: 5px;
-    padding: 8px;
-    max-height: 300px;
-    overflow-y: auto;
-    transition: border-color 0.3s;
-}
-
-/* 标题样式 */
-.quick-reply-list-title {
-    text-align: center;
-    color: #ccc;
-    font-size: 14px;
-    margin-bottom: 8px;
-    padding-bottom: 5px;
-    border-bottom: 1px solid #444;
-    transition: color 0.3s, border-bottom-color 0.3s;
-}
-
-/* 快捷回复项样式 */
-.quick-reply-item {
-    display: block;
+/* --- 图标设置模态框样式 --- */
+.qs-icon-settings-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    padding: 5px 8px;
-    margin: 4px 0;
-    background-color: rgba(60, 60, 60, 0.7);
-    color: white;
-    text-align: center;
+    height: 100%;
+    z-index: 1050; /* Higher than menu */
+    display: flex; /* Used for centering content */
+    align-items: center;
+    justify-content: center;
+}
+
+.qs-icon-settings-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent backdrop */
+}
+
+.qs-icon-settings-content {
+    position: relative; /* To be above backdrop */
+    background-color: var(--background-color, #2c2c2c); /* Use ST variable or fallback */
+    color: var(--text-color, #ffffff);
+    border: 1px solid var(--border-color, #555);
+    border-radius: 8px;
+    padding: 20px;
+    width: 500px;
+    max-width: 90vw;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    z-index: 1051; /* Above backdrop */
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.qs-icon-settings-content h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--text-color-heading, var(--text-color, #ffffff));
+    border-bottom: 1px solid var(--border-color, #444);
+    padding-bottom: 10px;
+}
+
+.qs-icon-settings-field {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column; /* Stack label and input vertically */
+}
+
+.qs-icon-settings-field label {
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: var(--text-color-secondary, #ccc);
+}
+
+/* Ensure inputs use theme styles */
+.qs-icon-settings-content .text_pole,
+.qs-icon-settings-content select.text_pole,
+.qs-icon-settings-content textarea.text_pole,
+.qs-icon-settings-content input[type="color"].text_pole {
+    /* Inherit ST styles if possible, or define basic ones */
+    background-color: var(--input-background-color, #333);
+    color: var(--input-text-color, #fff);
+    border: 1px solid var(--input-border-color, #555);
+    border-radius: 4px;
+    padding: 8px;
+    width: 100%; /* Make inputs fill container */
+    box-sizing: border-box; /* Include padding/border in width */
+}
+.qs-icon-settings-content input[type="color"].text_pole {
+    padding: 2px; /* Color pickers might need less padding */
+    height: 30px; /* Explicit height for color picker */
+    cursor: pointer;
+}
+
+
+.qs-icon-settings-field small {
+    color: var(--text-color-muted, #888);
+    font-size: 0.85em;
+    margin-top: 5px;
+}
+
+/* Icon Preview Area */
+.qs-icon-settings-preview {
+    min-height: 30px;
+    padding: 10px;
+    border: 1px dashed var(--border-color, #555);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 5px;
+    background-color: rgba(255, 255, 255, 0.05); /* Slight background */
+}
+.qs-icon-settings-preview svg,
+.qs-icon-settings-preview img,
+.qs-icon-settings-preview i {
+    max-width: 100%; /* Ensure preview content doesn't overflow */
+    max-height: 40px; /* Limit height */
+}
+
+
+/* Button Styling (mimic ST buttons) */
+.qs-icon-settings-content .menu_button {
+    /* Basic button styling - Adjust to match ST's .menu_button */
+    background-color: var(--secondary-button-background, #555);
+    color: var(--button-text-color, #fff);
+    border: 1px solid var(--button-border-color, #777);
+    padding: 8px 15px;
     border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.2s;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    border: none;
+    transition: background-color 0.2s, border-color 0.2s;
+    margin-left: 10px;
 }
 
-.quick-reply-item:hover {
-    background-color: rgba(100, 100, 100, 0.9);
+.qs-icon-settings-content .menu_button:hover {
+    background-color: var(--secondary-button-hover-background, #666);
+    border-color: var(--button-hover-border-color, #888);
 }
 
-/* 滚动条样式 */
+.qs-icon-settings-content .menu_button_primary {
+    background-color: var(--primary-button-background, #4a90e2);
+    border-color: var(--primary-button-border-color, #4a90e2);
+}
+
+.qs-icon-settings-content .menu_button_primary:hover {
+    background-color: var(--primary-button-hover-background, #5aa1f2);
+    border-color: var(--primary-button-hover-border-color, #5aa1f2);
+}
+/* (滚动条样式 和 空列表提示 保持不变) */
 .quick-reply-list::-webkit-scrollbar {
     width: 4.5px;
 }
@@ -181,7 +221,6 @@
     background: rgba(120, 120, 120, 0.7);
 }
 
-/* 空列表提示 */
 .quick-reply-empty {
     color: #666;
     text-align: center;
