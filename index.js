@@ -152,6 +152,7 @@ function updateIconPreview(iconType) {
 /**
  * Initializes the plugin: creates UI, sets up listeners, loads settings.
  */
+// 只需修改初始化部分，在setupEventListeners之后添加以下行
 function initializePlugin() {
     try {
         console.log(`[${Constants.EXTENSION_NAME}] Initializing...`);
@@ -182,9 +183,6 @@ function initializePlugin() {
 
         // Load settings and apply UI
         loadAndApplySettings();
-        
-        // 设置文件上传事件监听器
-        setupFileUploadListener();
 
         // Setup event listeners
         setupEventListeners();
