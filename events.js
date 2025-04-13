@@ -3,8 +3,7 @@ import * as Constants from './constants.js';
 import { sharedState, setMenuVisible } from './state.js';
 import { updateMenuVisibilityUI } from './ui.js';
 import { triggerQuickReply } from './api.js';
-// Import setupSettingsEventListeners directly since it's exported
-import { setupSettingsEventListeners } from './settings.js';
+import { handleSettingsChange } from './settings.js';
 
 /**
  * Handles clicks on the rocket button. Toggles menu visibility state and updates UI.
@@ -71,40 +70,10 @@ export function setupEventListeners() {
     document.addEventListener('click', handleOutsideClick);
 
     // Settings listeners
-    if (settingsDropdown) {
-        settingsDropdown.addEventListener('change', function(event) {
-            // Reference the function directly from the window object
-            if (window.quickReplyMenu && window.quickReplyMenu.handleSettingsChange) {
-                window.quickReplyMenu.handleSettingsChange(event);
-            }
-        });
-    }
+    settingsDropdown?.addEventListener('change', handleSettingsChange);
     
     // 新增图标设置相关监听器
-    if (iconTypeDropdown) {
-        iconTypeDropdown.addEventListener('change', function(event) {
-            if (window.quickReplyMenu && window.quickReplyMenu.handleSettingsChange) {
-                window.quickReplyMenu.handleSettingsChange(event);
-            }
-        });
-    }
-    
-    if (customIconUrl) {
-        customIconUrl.addEventListener('input', function(event) {
-            if (window.quickReplyMenu && window.quickReplyMenu.handleSettingsChange) {
-                window.quickReplyMenu.handleSettingsChange(event);
-            }
-        });
-    }
-    
-    if (colorMatchCheckbox) {
-        colorMatchCheckbox.addEventListener('change', function(event) {
-            if (window.quickReplyMenu && window.quickReplyMenu.handleSettingsChange) {
-                window.quickReplyMenu.handleSettingsChange(event);
-            }
-        });
-    }
-    
-    // 设置文件上传事件监听器
-    setupSettingsEventListeners();
+    iconTypeDropdown?.addEventListener('change', handleSettingsChange);
+    customIconUrl?.addEventListener('input', handleSettingsChange);
+    colorMatchCheckbox?.addEventListener('change', handleSettingsChange);
 }
