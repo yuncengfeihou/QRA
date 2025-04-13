@@ -1,8 +1,8 @@
 // ui.js
 import * as Constants from './constants.js';
-import { handleQuickReplyClick } from './events.js';
 import { fetchQuickReplies } from './api.js';
 import { sharedState } from './state.js';
+// 移除从events导入handleQuickReplyClick，避免循环引用
 
 /**
  * Creates the main quick reply button (legacy, kept for reference).
@@ -88,56 +88,16 @@ export function createQuickReplyItem(reply) {
     item.title = reply.message.length > 50 ? reply.message.slice(0, 50) + '...' : reply.message;
     item.textContent = reply.label;
     
-    // Add click handler directly to this element
-    item.addEventListener('click', handleQuickReplyClick);
+    // 将事件监听器的设置移到setupEventListeners中处理
+    item.dataset.type = 'quick-reply-item';
     
     return item;
 }
 
 /**
- * Creates an empty placeholder element.
- * @param {string} message - The message to display
- * @returns {HTMLElement} The empty placeholder element
+ * 更新按钮图标显示
+ * 根据设置使用不同的图标和颜色风格
  */
-export function createEmptyPlaceholder(message) {
-    const empty = document.createElement('div');
-    empty.className = Constants.CLASS_EMPTY;
-    empty.textContent = message;
-    return empty;
-}
-
-/**
- * Renders quick replies into the menu containers.
- * @param {Array<object>} chatReplies - Chat-specific quick replies
- * @param {Array<object>} globalReplies - Global quick replies
- */
-export function renderQuickReplies(chatReplies, globalReplies) {
-    const { chatItemsContainer, globalItemsContainer } = sharedState.domElements;
-    if (!chatItemsContainer || !globalItemsContainer) return;
-
-    // Clear existing content
-    chatItemsContainer.innerHTML = '';
-    globalItemsContainer.innerHTML = '';
-
-    // Render chat replies
-    if (chatReplies.length > 0) {
-        chatReplies.forEach(reply => {
-            chatItemsContainer.appendChild(createQuickReplyItem(reply));
-        });
-    } else {
-        chatItemsContainer.appendChild(createEmptyPlaceholder('没有可用的聊天快捷回复'));
-    }
-
-    // Render global replies
-    if (globalReplies.length > 0) {
-        globalReplies.forEach(reply => {
-            globalItemsContainer.appendChild(createQuickReplyItem(reply));
-        });
-    } else {
-        globalItemsContainer.appendChild(createEmptyPlaceholder('没有可用的全局快捷回复'));
-    }
-}
-
 export function updateIconDisplay() {
     const button = sharedState.domElements.rocketButton;
     if (!button) return;
@@ -172,11 +132,6 @@ export function updateIconDisplay() {
             const sendButtonStyle = getComputedStyle(sendButton);
             
             // 应用颜色和背景色
-            button.style.setProperty('--accent-color', sendButtonStyle.getPropertyValue('--accent-color'));
-            button.style.setProperty('--accent-color-hover', sendButtonStyle.getPropertyValue('--accent-color-hover'));
-            button.style.setProperty('--accent-color-active', sendButtonStyle.getPropertyValue('--accent-color-active'));
-            
-            // 直接匹配发送按钮的颜色
             button.style.color = sendButtonStyle.color;
             
             // 添加额外的CSS类以匹配发送按钮
@@ -186,6 +141,62 @@ export function updateIconDisplay() {
             }
         }
     }
+}
+
+// 其他函数...
+
+/**
+ * Renders quick replies into the menu containers.
+ * @param {Array<object>} chatReplies - Chat-specific quick replies
+ * @param {Array<object>} globalReplies - Global quick replies
+ */
+export function renderQuickReplies(chatReplies, globalReplies) {
+    const { chatItemsContainer, globalItemsContainer } = sharedState.domElements;
+    if (!chatItemsContainer || !globalItemsContainer) return;
+
+    // Clear existing content
+    chatItemsContainer.innerHTML = '';
+    globalItemsContainer.innerHTML = '';
+
+    // Render chat replies
+    if (chatReplies.length > 0) {
+        chatReplies.forEach(reply => {
+            chatItemsContainer.appendChild(createQuickReplyItem(reply));
+        });
+    } else {
+        chatItemsContainer.appendChild(createEmptyPlaceholder('没有可用的聊天快捷回复'));
+    }
+
+    // Render global replies
+    if (globalReplies.length > 0) {
+        globalReplies.forEach(reply => {
+            globalItemsContainer.appendChild(createQuickReplyItem(reply));
+        });
+    } else {
+        globalItemsContainer.appendChild(createEmptyPlaceholder('没有可用的全局快捷回复'));
+    }
+    
+    // 为新添加的按钮添加事件监听
+    document.querySelectorAll(`.${Constants.CLASS_ITEM}`).forEach(item => {
+        item.addEventListener('click', function(event) {
+            // 引用全局事件处理函数
+            if (window.quickReplyMenu && window.quickReplyMenu.handleQuickReplyClick) {
+                window.quickReplyMenu.handleQuickReplyClick(event);
+            }
+        });
+    });
+}
+
+/**
+ * Creates an empty placeholder element.
+ * @param {string} message - The message to display
+ * @returns {HTMLElement} The empty placeholder element
+ */
+export function createEmptyPlaceholder(message) {
+    const empty = document.createElement('div');
+    empty.className = Constants.CLASS_EMPTY;
+    empty.textContent = message;
+    return empty;
 }
 
 /**
