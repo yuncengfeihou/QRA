@@ -1,6 +1,6 @@
 // api.js
 import * as Constants from './constants.js';
-// import { setMenuVisible } from './state.js'; // No longer needed here
+import { setMenuVisible } from './state.js'; // 假设 state.js 仍然存在且被需要
 
 /**
  * Fetches chat and global quick replies from the quickReplyApi.
@@ -20,20 +20,26 @@ export function fetchQuickReplies() {
 
     const qrApi = window.quickReplyApi;
 
-    // Check if Quick Reply v2 extension itself is enabled
-    // Treat isEnabled=true or undefined as enabled, only false as disabled
+    // --- 新增检查 ---
+    // 检查 Quick Reply v2 扩展本身是否启用
+    // 同时检查 settings 对象是否存在，以防万一
+    // 注意：我们假设 isEnabled=true 或 undefined 时都算启用，只有明确为 false 才算禁用
     if (!qrApi.settings || qrApi.settings.isEnabled === false) {
         console.log(`[${Constants.EXTENSION_NAME}] Core Quick Reply v2 is disabled. Skipping reply fetch.`);
+        // 直接返回空数组，不进行后续获取
         return { chat: [], global: [] };
     }
+    // --- 检查结束 ---
+
 
     try {
         // Fetch Chat Quick Replies (Accessing internal settings)
+        // 只有在主 Quick Reply v2 启用时才继续获取
         if (qrApi.settings?.chatConfig?.setList) {
             qrApi.settings.chatConfig.setList.forEach(setLink => {
                 if (setLink?.isVisible && setLink.set?.qrList) {
                     setLink.set.qrList.forEach(qr => {
-                        if (qr && !qr.isHidden && qr.label) {
+                        if (qr && !qr.isHidden && qr.label) { // Added check for qr object and label
                             chatReplies.push({
                                 setName: setLink.set.name || 'Unknown Set',
                                 label: qr.label,
@@ -49,10 +55,12 @@ export function fetchQuickReplies() {
         }
 
         // Fetch Global Quick Replies (Accessing internal settings)
+        // 只有在主 Quick Reply v2 启用时才继续获取
         if (qrApi.settings?.config?.setList) {
             qrApi.settings.config.setList.forEach(setLink => {
                 if (setLink?.isVisible && setLink.set?.qrList) {
                     setLink.set.qrList.forEach(qr => {
+                        // Only add if not hidden and label doesn't exist in chat replies
                         if (qr && !qr.isHidden && qr.label && !chatQrLabels.has(qr.label)) {
                             globalReplies.push({
                                 setName: setLink.set.name || 'Unknown Set',
@@ -71,7 +79,8 @@ export function fetchQuickReplies() {
 
     } catch (error) {
         console.error(`[${Constants.EXTENSION_NAME}] Error fetching quick replies:`, error);
-        return { chat: [], global: [] }; // Return empty on error
+        // Return empty arrays on error to prevent issues down the line
+        return { chat: [], global: [] };
     }
 
     return { chat: chatReplies, global: globalReplies };
@@ -86,27 +95,28 @@ export function fetchQuickReplies() {
 export async function triggerQuickReply(setName, label) {
     if (!window.quickReplyApi) {
         console.error(`[${Constants.EXTENSION_NAME}] Quick Reply API not found! Cannot trigger reply.`);
-        // Caller should handle UI state (e.g., closing the menu)
-        return; // Indicate failure
+        // setMenuVisible(false); // 让调用者处理 UI 状态
+        return; // Indicate failure or inability to proceed
     }
 
-    const qrApi = window.quickReplyApi; // Get reference for check
-
-    // Check if Core Quick Reply v2 is enabled before triggering
-    if (!qrApi.settings || qrApi.settings.isEnabled === false) {
-         console.log(`[${Constants.EXTENSION_NAME}] Core Quick Reply v2 is disabled. Cannot trigger reply '${setName}.${label}'.`);
-         // Caller handles UI state
-         return; // Indicate failure
+    // --- 新增检查 ---
+    // 触发前也检查主 Quick Reply v2 是否启用
+    if (!window.quickReplyApi.settings || window.quickReplyApi.settings.isEnabled === false) {
+         console.log(`[${Constants.EXTENSION_NAME}] Core Quick Reply v2 is disabled. Cannot trigger reply.`);
+         // setMenuVisible(false); // 让调用者处理 UI 状态
+         return;
     }
+    // --- 检查结束 ---
 
     console.log(`[${Constants.EXTENSION_NAME}] Triggering Quick Reply: "${setName}.${label}"`);
     try {
-        // Assume qrApi.executeQuickReply is the correct API call method
+        // 假设 qrApi.executeQuickReply 是正确的 API 调用方法
+        // 注意：根据 QuickReplyApi.js.txt，实际方法是 executeQuickReply
         await window.quickReplyApi.executeQuickReply(setName, label);
         console.log(`[${Constants.EXTENSION_NAME}] Quick Reply "${setName}.${label}" executed successfully.`);
     } catch (error) {
         console.error(`[${Constants.EXTENSION_NAME}] Failed to execute Quick Reply "${setName}.${label}":`, error);
-        // Caller handles UI state, even on error
+        // 让调用者处理 UI 关闭，即使出错
     }
-    // No need to setMenuVisible(false) here; let the caller (handleQuickReplyClick) do it.
+    // 不需要在这里设置 setMenuVisible(false)
 }
