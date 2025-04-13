@@ -4,6 +4,7 @@ import { sharedState } from './state.js';
 import { createMenuElement } from './ui.js';
 import { createSettingsHtml } from './settings.js';
 import { setupEventListeners, handleQuickReplyClick } from './events.js';
+import { handleFileUpload } from './settings.js';  // 导入handleFileUpload函数
 
 // 创建本地设置对象，如果全局对象不存在
 if (typeof window.extension_settings === 'undefined') {
