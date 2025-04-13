@@ -152,6 +152,7 @@ function updateIconPreview(iconType) {
 /**
  * Initializes the plugin: creates UI, sets up listeners, loads settings.
  */
+// index.js - 需要修改的部分
 function initializePlugin() {
     try {
         console.log(`[${Constants.EXTENSION_NAME}] Initializing...`);
@@ -167,6 +168,11 @@ function initializePlugin() {
         sharedState.domElements.menu = menu;
         sharedState.domElements.chatItemsContainer = menu.querySelector(`#${Constants.ID_CHAT_ITEMS}`);
         sharedState.domElements.globalItemsContainer = menu.querySelector(`#${Constants.ID_GLOBAL_ITEMS}`);
+        
+        // Append menu to the body
+        document.body.appendChild(menu);
+        
+        // 确保先将DOM元素添加到document中，再获取设置元素的引用
         sharedState.domElements.settingsDropdown = document.getElementById(Constants.ID_SETTINGS_ENABLED_DROPDOWN);
         sharedState.domElements.iconTypeDropdown = document.getElementById(Constants.ID_ICON_TYPE_DROPDOWN);
         sharedState.domElements.customIconUrl = document.getElementById(Constants.ID_CUSTOM_ICON_URL);
@@ -177,9 +183,6 @@ function initializePlugin() {
             handleQuickReplyClick
         };
 
-        // Append menu to the body
-        document.body.appendChild(menu);
-
         // Load settings and apply UI
         loadAndApplySettings();
 
@@ -189,17 +192,6 @@ function initializePlugin() {
         console.log(`[${Constants.EXTENSION_NAME}] Initialization complete.`);
     } catch (err) {
         console.error(`[${Constants.EXTENSION_NAME}] 初始化失败:`, err);
-    }
-}
-
-// 确保 jQuery 可用 - 使用原生 js 备用
-function onReady(callback) {
-    if (typeof jQuery !== 'undefined') {
-        jQuery(callback);
-    } else if (document.readyState === "complete" || document.readyState === "interactive") {
-        setTimeout(callback, 1);
-    } else {
-        document.addEventListener("DOMContentLoaded", callback);
     }
 }
 
@@ -219,6 +211,10 @@ onReady(() => {
         
         // 初始化插件
         initializePlugin();
+        
+        // 确保文件上传监听器已设置
+        // 这里额外调用一次，确保在DOM加载完成后设置这些监听器
+        setupSettingsEventListeners();
     } catch (err) {
         console.error(`[${Constants.EXTENSION_NAME}] 启动失败:`, err);
     }
