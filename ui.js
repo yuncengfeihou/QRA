@@ -105,11 +105,10 @@ export function createQuickReplyItem(reply) {
     return item;
 }
 
-
 /**
  * 更新按钮图标显示
  * 根据设置使用不同的图标和颜色风格
- **/
+ */
 export function updateIconDisplay() {
     const button = sharedState.domElements.rocketButton;
     if (!button) return;
@@ -121,54 +120,14 @@ export function updateIconDisplay() {
     button.innerHTML = '';
     button.className = 'interactable secondary-button';
     
-    // 如果是自定义图标
+    // 如果是自定义图标，使用图片元素
     if (iconType === Constants.ICON_TYPES.CUSTOM && settings.customIconUrl) {
-        const customContent = settings.customIconUrl.trim();
-        
-        // 检测SVG内容
-        if (customContent.startsWith('<svg') && customContent.includes('</svg>')) {
-            // 是SVG代码
-            button.innerHTML = customContent;
-            const svgElement = button.querySelector('svg');
-            if (svgElement) {
-                svgElement.style.width = '20px';
-                svgElement.style.height = '20px';
-            }
-        } 
-        else if (customContent.startsWith('data:') || 
-                customContent.startsWith('http') || 
-                customContent.endsWith('.png') || 
-                customContent.endsWith('.jpg') || 
-                customContent.endsWith('.svg') ||
-                customContent.endsWith('.gif')) {
-            // URL或Base64编码的图片
-            const img = document.createElement('img');
-            img.src = customContent;
-            img.alt = '快速回复';
-            img.style.maxHeight = '20px';
-            img.style.maxWidth = '20px';
-            button.appendChild(img);
-        } 
-        else {
-            // 可能是不完整的base64，尝试补全
-            if (customContent.includes('base64,')) {
-                const img = document.createElement('img');
-                // 如果只粘贴了base64部分而没有data:前缀，尝试添加
-                if (!customContent.startsWith('data:')) {
-                    img.src = 'data:image/png;base64,' + customContent.split('base64,')[1];
-                } else {
-                    img.src = customContent;
-                }
-                img.alt = '快速回复';
-                img.style.maxHeight = '20px';
-                img.style.maxWidth = '20px';
-                button.appendChild(img);
-            } else {
-                // 不是可识别的格式，使用文本显示
-                button.textContent = '?';
-                console.warn(`[${Constants.EXTENSION_NAME}] 无法识别的图标格式`);
-            }
-        }
+        const img = document.createElement('img');
+        img.src = settings.customIconUrl;
+        img.alt = '快速回复';
+        img.style.maxHeight = '20px';
+        img.style.maxWidth = '20px';
+        button.appendChild(img);
     } else {
         // 使用FontAwesome图标
         const iconClass = Constants.ICON_CLASS_MAP[iconType] || Constants.ICON_CLASS_MAP[Constants.ICON_TYPES.ROCKET];
@@ -183,7 +142,7 @@ export function updateIconDisplay() {
             // 获取计算后的样式
             const sendButtonStyle = getComputedStyle(sendButton);
             
-            // 应用颜色
+            // 应用颜色和背景色
             button.style.color = sendButtonStyle.color;
             
             // 添加额外的CSS类以匹配发送按钮
@@ -194,6 +153,8 @@ export function updateIconDisplay() {
         }
     }
 }
+
+// 其他函数...
 
 /**
  * Renders quick replies into the menu containers.
@@ -276,55 +237,5 @@ export function updateMenuVisibilityUI() {
         rocketButton.setAttribute('aria-expanded', 'false');
         // Remove active class
         rocketButton.classList.remove('active');
-    }
-}
-
-/**
- * 处理文件上传事件
- * @param {Event} event 文件上传事件
- */
-export function handleFileUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const customIconUrl = document.getElementById(Constants.ID_CUSTOM_ICON_URL);
-        if (customIconUrl) {
-            customIconUrl.value = e.target.result; // 将文件转为base64
-            
-            // 更新设置
-            const settings = extension_settings[Constants.EXTENSION_NAME];
-            settings.customIconUrl = e.target.result;
-            
-            // 更新预览
-            if (settings.iconType === Constants.ICON_TYPES.CUSTOM) {
-                // 假设有updateIconPreview函数
-                if (window.updateIconPreview) {
-                    window.updateIconPreview(Constants.ICON_TYPES.CUSTOM);
-                }
-            }
-            
-            // 更新图标显示
-            updateIconDisplay();
-            
-            // 保存设置
-            if (typeof context !== 'undefined' && context.saveExtensionSettings) {
-                context.saveExtensionSettings();
-            } else {
-                console.log(`[${Constants.EXTENSION_NAME}] 设置已更新（模拟保存）`);
-            }
-        }
-    };
-    reader.readAsDataURL(file);
-}
-
-/**
- * 设置文件上传事件监听器
- */
-export function setupFileUploadListener() {
-    const fileUpload = document.getElementById('icon-file-upload');
-    if (fileUpload) {
-        fileUpload.addEventListener('change', handleFileUpload);
     }
 }
