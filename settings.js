@@ -28,9 +28,10 @@ function updateIconDisplay() {
             if (svgElement) {
                 svgElement.style.width = '20px';
                 svgElement.style.height = '20px';
-                // 确保SVG正确显示
+                // 确保SVG可见
                 svgElement.setAttribute('width', '20px');
                 svgElement.setAttribute('height', '20px');
+                svgElement.setAttribute('viewBox', svgElement.getAttribute('viewBox') || '0 0 24 24');
                 svgElement.style.display = 'inline-block';
             }
         } 
@@ -138,8 +139,7 @@ export function createSettingsHtml() {
                         <input type="text" id="${Constants.ID_CUSTOM_ICON_URL}" class="text_pole" style="flex-grow:1;"
                                placeholder="支持URL、base64编码图片或SVG代码" />
                         <input type="file" id="icon-file-upload" accept="image/*" style="display:none" />
-                        <button class="menu_button" style="width:auto;padding:0 10px;" 
-                                id="icon-file-button">
+                        <button id="icon-file-button" class="menu_button" style="width:auto;padding:0 10px;">
                             选择文件
                         </button>
                     </div>
@@ -183,9 +183,10 @@ function updateIconPreview(iconType) {
             if (svgElement) {
                 svgElement.style.width = '20px';
                 svgElement.style.height = '20px';
-                // 确保SVG正确显示
+                // 确保SVG可见
                 svgElement.setAttribute('width', '20px');
                 svgElement.setAttribute('height', '20px');
+                svgElement.setAttribute('viewBox', svgElement.getAttribute('viewBox') || '0 0 24 24');
                 svgElement.style.display = 'inline-block';
             }
         } 
@@ -237,6 +238,10 @@ function handleFileUpload(event) {
         if (customIconUrl) {
             customIconUrl.value = e.target.result; // 将文件转为base64
             
+            // 手动触发输入事件，确保值被正确更新
+            const inputEvent = new Event('input', { bubbles: true });
+            customIconUrl.dispatchEvent(inputEvent);
+            
             // 更新设置
             const settings = extension_settings[Constants.EXTENSION_NAME];
             settings.customIconUrl = e.target.result;
@@ -251,6 +256,8 @@ function handleFileUpload(event) {
             
             // 保存设置
             saveSettings();
+            
+            console.log(`[${Constants.EXTENSION_NAME}] 图标文件已上传并应用`);
         }
     };
     reader.readAsDataURL(file);
@@ -326,18 +333,53 @@ function saveSettings() {
  * 设置事件监听器
  */
 export function setupSettingsEventListeners() {
+    console.log(`[${Constants.EXTENSION_NAME}] 设置事件监听器...`);
+
     // 文件上传监听器
     const fileUpload = document.getElementById('icon-file-upload');
     if (fileUpload) {
+        // 移除先前的监听器（如果有）
+        fileUpload.removeEventListener('change', handleFileUpload);
+        // 添加新的监听器
         fileUpload.addEventListener('change', handleFileUpload);
+        console.log(`[${Constants.EXTENSION_NAME}] 文件上传监听器已设置`);
+    } else {
+        console.warn(`[${Constants.EXTENSION_NAME}] 找不到文件上传元素`);
     }
     
     // 文件选择按钮点击事件
     const fileButton = document.getElementById('icon-file-button');
     if (fileButton) {
-        fileButton.addEventListener('click', function() {
-            document.getElementById('icon-file-upload')?.click();
+        // 移除先前的监听器（如果有）
+        const clickHandlers = fileButton.getEventListeners?.('click') || [];
+        clickHandlers.forEach(handler => {
+            fileButton.removeEventListener('click', handler);
         });
+        
+        // 添加新的监听器
+        fileButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            console.log(`[${Constants.EXTENSION_NAME}] 文件按钮被点击`);
+            const fileInput = document.getElementById('icon-file-upload');
+            if (fileInput) {
+                fileInput.click();
+            } else {
+                console.warn(`[${Constants.EXTENSION_NAME}] 找不到文件上传元素`);
+            }
+        });
+        console.log(`[${Constants.EXTENSION_NAME}] 文件按钮监听器已设置`);
+    } else {
+        console.warn(`[${Constants.EXTENSION_NAME}] 找不到文件按钮元素`);
+    }
+    
+    // 自定义图标URL输入框事件
+    const customIconUrl = document.getElementById(Constants.ID_CUSTOM_ICON_URL);
+    if (customIconUrl) {
+        // 移除先前的监听器（如果有）
+        customIconUrl.removeEventListener('input', handleSettingsChange);
+        // 添加新的监听器
+        customIconUrl.addEventListener('input', handleSettingsChange);
+        console.log(`[${Constants.EXTENSION_NAME}] 自定义图标URL输入框监听器已设置`);
     }
 }
 
