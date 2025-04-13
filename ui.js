@@ -3,6 +3,18 @@ import * as Constants from './constants.js';
 import { fetchQuickReplies } from './api.js';
 import { sharedState } from './state.js';
 import { extension_settings } from "./index.js";  
+
+// 重命名这个函数，避免与settings.js的函数冲突
+export function updateButtonIconDisplay() {
+    const button = sharedState.domElements.rocketButton;
+    if (!button) return;
+    
+    const settings = extension_settings[Constants.EXTENSION_NAME];
+    const iconType = settings.iconType || Constants.ICON_TYPES.ROCKET;
+    
+    // 其他代码保持不变...
+}
+
 /**
  * Creates the main quick reply button (legacy, kept for reference).
  * @returns {HTMLElement} The created button element.
