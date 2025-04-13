@@ -3,7 +3,7 @@ import * as Constants from './constants.js';
 import { sharedState, setMenuVisible } from './state.js';
 import { updateMenuVisibilityUI } from './ui.js';
 import { triggerQuickReply } from './api.js';
-import { handleSettingsChange } from './settings.js';
+import { handleSettingsChange, setupSettingsEventListeners } from './settings.js';
 
 /**
  * Handles clicks on the rocket button. Toggles menu visibility state and updates UI.
@@ -76,4 +76,7 @@ export function setupEventListeners() {
     iconTypeDropdown?.addEventListener('change', handleSettingsChange);
     customIconUrl?.addEventListener('input', handleSettingsChange);
     colorMatchCheckbox?.addEventListener('change', handleSettingsChange);
+    
+    // 设置文件上传事件监听器
+    setupSettingsEventListeners();
 }
