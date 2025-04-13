@@ -109,7 +109,7 @@ export function createQuickReplyItem(reply) {
 /**
  * 更新按钮图标显示
  * 根据设置使用不同的图标和颜色风格
- */
+ **/
 export function updateIconDisplay() {
     const button = sharedState.domElements.rocketButton;
     if (!button) return;
@@ -121,11 +121,11 @@ export function updateIconDisplay() {
     button.innerHTML = '';
     button.className = 'interactable secondary-button';
     
-    // 如果是自定义图标，使用图片元素
+    // 如果是自定义图标
     if (iconType === Constants.ICON_TYPES.CUSTOM && settings.customIconUrl) {
         const customContent = settings.customIconUrl.trim();
         
-        // 检测内容类型
+        // 检测SVG内容
         if (customContent.startsWith('<svg') && customContent.includes('</svg>')) {
             // 是SVG代码
             button.innerHTML = customContent;
@@ -134,14 +134,40 @@ export function updateIconDisplay() {
                 svgElement.style.width = '20px';
                 svgElement.style.height = '20px';
             }
-        } else {
-            // 使用图片元素显示
+        } 
+        else if (customContent.startsWith('data:') || 
+                customContent.startsWith('http') || 
+                customContent.endsWith('.png') || 
+                customContent.endsWith('.jpg') || 
+                customContent.endsWith('.svg') ||
+                customContent.endsWith('.gif')) {
+            // URL或Base64编码的图片
             const img = document.createElement('img');
             img.src = customContent;
             img.alt = '快速回复';
             img.style.maxHeight = '20px';
             img.style.maxWidth = '20px';
             button.appendChild(img);
+        } 
+        else {
+            // 可能是不完整的base64，尝试补全
+            if (customContent.includes('base64,')) {
+                const img = document.createElement('img');
+                // 如果只粘贴了base64部分而没有data:前缀，尝试添加
+                if (!customContent.startsWith('data:')) {
+                    img.src = 'data:image/png;base64,' + customContent.split('base64,')[1];
+                } else {
+                    img.src = customContent;
+                }
+                img.alt = '快速回复';
+                img.style.maxHeight = '20px';
+                img.style.maxWidth = '20px';
+                button.appendChild(img);
+            } else {
+                // 不是可识别的格式，使用文本显示
+                button.textContent = '?';
+                console.warn(`[${Constants.EXTENSION_NAME}] 无法识别的图标格式`);
+            }
         }
     } else {
         // 使用FontAwesome图标
@@ -157,7 +183,7 @@ export function updateIconDisplay() {
             // 获取计算后的样式
             const sendButtonStyle = getComputedStyle(sendButton);
             
-            // 应用颜色和背景色
+            // 应用颜色
             button.style.color = sendButtonStyle.color;
             
             // 添加额外的CSS类以匹配发送按钮
