@@ -3,14 +3,7 @@ import * as Constants from './constants.js';
 import { sharedState, setMenuVisible } from './state.js';
 import { updateMenuVisibilityUI } from './ui.js';
 import { triggerQuickReply } from './api.js';
-import {
-    handleSettingsChange as settingsChangeHandler, // Keep alias
-    handleCustomizeIconClick,
-    handleIconSettingsClose,
-    handleIconSettingsSave,
-    handleIconTypeChange,
-    updateIconPreview // Import preview updater
-} from './settings.js';
+import { handleSettingsChange as settingsChangeHandler } from './settings.js'; // Alias import
 
 /**
  * Handles clicks on the rocket button. Toggles menu visibility state and updates UI.
@@ -21,31 +14,22 @@ export function handleRocketButtonClick() {
 }
 
 /**
- * Handles clicks outside the menu AND outside the icon settings modal to close the menu.
- * Also handles clicks on the modal backdrop to close the modal.
+ * Handles clicks outside the menu to close it.
  * @param {Event} event
  */
 export function handleOutsideClick(event) {
-    const { menu, rocketButton, iconSettingsModal, iconSettingsBackdrop, customizeIconButton } = sharedState.domElements;
-
-    // Close menu if click is outside menu, rocket button, AND the icon settings modal
+    const { menu, rocketButton } = sharedState.domElements;
     if (sharedState.menuVisible &&
-        menu && rocketButton && iconSettingsModal &&
+        menu && rocketButton &&
         !menu.contains(event.target) &&
-        event.target !== rocketButton && !rocketButton.contains(event.target) &&
-        !iconSettingsModal.contains(event.target) // Added check for modal
+        event.target !== rocketButton &&
+        !rocketButton.contains(event.target)
        ) {
-        setMenuVisible(false);
-        updateMenuVisibilityUI();
-    }
-
-    // Close icon settings modal if click is on the backdrop
-    if (iconSettingsModal && iconSettingsModal.style.display !== 'none' && event.target === iconSettingsBackdrop) {
-        handleIconSettingsClose();
+        setMenuVisible(false); // Update state
+        updateMenuVisibilityUI(); // Update UI
     }
 }
 
-// handleQuickReplyClick remains unchanged...
 /**
  * Handles clicks on individual quick reply items (buttons).
  * Reads data attributes and triggers the API call.
@@ -63,18 +47,6 @@ export async function handleQuickReplyClick(event) {
         return;
     }
 
-     // Check if core QR is enabled before triggering
-    const qrApi = window.quickReplyApi;
-    const isQrCoreEnabled = !qrApi || !qrApi.settings || qrApi.settings.isEnabled !== false;
-
-    if (!isQrCoreEnabled) {
-         console.log(`[${Constants.EXTENSION_NAME}] Core Quick Reply v2 is disabled. Cannot trigger reply.`);
-         setMenuVisible(false); // Close menu
-         updateMenuVisibilityUI();
-         return;
-    }
-
-
     await triggerQuickReply(setName, label); // Await the API call
 
     // Always close the menu after attempting to trigger, regardless of success/failure
@@ -87,43 +59,14 @@ export async function handleQuickReplyClick(event) {
  * Sets up all event listeners for the plugin.
  */
 export function setupEventListeners() {
-    const {
-        rocketButton,
-        settingsDropdown,
-        customizeIconButton,
-        iconSettingsCloseButton,
-        iconSettingsSaveButton,
-        iconTypeSelect,
-        // Listeners for inputs that should trigger preview update
-        iconSvgInput,
-        iconUrlInput,
-        iconColorPicker
-    } = sharedState.domElements;
+    const { rocketButton, settingsDropdown } = sharedState.domElements;
 
-    // Menu Trigger and Global Close
     rocketButton?.addEventListener('click', handleRocketButtonClick);
-    document.addEventListener('click', handleOutsideClick); // Handles menu close and modal backdrop close
+    document.addEventListener('click', handleOutsideClick);
 
-    // Item click listeners are added dynamically in ui.js -> createQuickReplyItem
+    // Item click listeners are added dynamically in ui.js (createQuickReplyItem),
+    // but they all point to handleQuickReplyClick defined here.
 
-    // Main Settings Listener
-    settingsDropdown?.addEventListener('change', settingsChangeHandler);
-
-    // Icon Settings Modal Listeners
-    customizeIconButton?.addEventListener('click', handleCustomizeIconClick);
-    iconSettingsCloseButton?.addEventListener('click', handleIconSettingsClose);
-    iconSettingsSaveButton?.addEventListener('click', handleIconSettingsSave);
-    iconTypeSelect?.addEventListener('change', handleIconTypeChange); // Update inputs visibility and preview
-
-    // Listeners to update preview in real-time(ish)
-    iconSvgInput?.addEventListener('input', updateIconPreview);
-    iconUrlInput?.addEventListener('input', updateIconPreview);
-    iconColorPicker?.addEventListener('input', updateIconPreview); // Update preview on color change
-
-    // Close modal on Escape key
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && sharedState.domElements.iconSettingsModal?.style.display !== 'none') {
-            handleIconSettingsClose();
-        }
-    });
+    // Settings listener
+    settingsDropdown?.addEventListener('change', settingsChangeHandler); // Use imported handler
 }
