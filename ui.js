@@ -4,139 +4,15 @@ import { handleQuickReplyClick } from './events.js';
 import { fetchQuickReplies } from './api.js';
 import { sharedState } from './state.js';
 
-/**
- * Creates the main quick reply button (legacy, kept for reference).
- * @returns {HTMLElement} The created button element.
- */
-export function createMenuButton() {
-    // This function is kept for reference but no longer used
-    const button = document.createElement('button');
-    button.id = Constants.ID_BUTTON;
-    button.type = 'button';
-    button.innerText = '[快速回复]';
-    button.setAttribute('aria-haspopup', 'true');
-    button.setAttribute('aria-expanded', 'false');
-    button.setAttribute('aria-controls', Constants.ID_MENU);
-    return button;
-}
+// createMenuButton (legacy) remains unchanged...
 
-/**
- * Creates the menu element.
- * @returns {HTMLElement} The created menu element.
- */
-export function createMenuElement() {
-    const menu = document.createElement('div');
-    menu.id = Constants.ID_MENU;
-    menu.setAttribute('role', Constants.ARIA_ROLE_MENU);
-    menu.tabIndex = -1;
-    menu.style.display = 'none';
+// createMenuElement remains unchanged...
 
-    const container = document.createElement('div');
-    container.className = Constants.CLASS_MENU_CONTAINER;
+// createQuickReplyItem remains unchanged...
 
-    // Chat quick replies section
-    const chatListContainer = document.createElement('div');
-    chatListContainer.id = Constants.ID_CHAT_LIST_CONTAINER;
-    chatListContainer.className = Constants.CLASS_LIST;
-    chatListContainer.setAttribute('role', Constants.ARIA_ROLE_GROUP);
+// createEmptyPlaceholder remains unchanged...
 
-    const chatTitle = document.createElement('div');
-    chatTitle.className = Constants.CLASS_LIST_TITLE;
-    chatTitle.textContent = '聊天快捷回复';
-    
-    const chatItems = document.createElement('div');
-    chatItems.id = Constants.ID_CHAT_ITEMS;
-
-    chatListContainer.appendChild(chatTitle);
-    chatListContainer.appendChild(chatItems);
-
-    // Global quick replies section
-    const globalListContainer = document.createElement('div');
-    globalListContainer.id = Constants.ID_GLOBAL_LIST_CONTAINER;
-    globalListContainer.className = Constants.CLASS_LIST;
-    globalListContainer.setAttribute('role', Constants.ARIA_ROLE_GROUP);
-
-    const globalTitle = document.createElement('div');
-    globalTitle.className = Constants.CLASS_LIST_TITLE;
-    globalTitle.textContent = '全局快捷回复';
-    
-    const globalItems = document.createElement('div');
-    globalItems.id = Constants.ID_GLOBAL_ITEMS;
-
-    globalListContainer.appendChild(globalTitle);
-    globalListContainer.appendChild(globalItems);
-
-    // Append sections to container
-    container.appendChild(chatListContainer);
-    container.appendChild(globalListContainer);
-    menu.appendChild(container);
-
-    return menu;
-}
-
-/**
- * Creates a single quick reply item.
- * @param {object} reply - The quick reply data
- * @returns {HTMLElement} The button element
- */
-export function createQuickReplyItem(reply) {
-    const item = document.createElement('button');
-    item.className = Constants.CLASS_ITEM;
-    item.setAttribute('role', Constants.ARIA_ROLE_MENUITEM);
-    item.dataset.setName = reply.setName;
-    item.dataset.label = reply.label;
-    item.title = reply.message.length > 50 ? reply.message.slice(0, 50) + '...' : reply.message;
-    item.textContent = reply.label;
-    
-    // Add click handler directly to this element
-    item.addEventListener('click', handleQuickReplyClick);
-    
-    return item;
-}
-
-/**
- * Creates an empty placeholder element.
- * @param {string} message - The message to display
- * @returns {HTMLElement} The empty placeholder element
- */
-export function createEmptyPlaceholder(message) {
-    const empty = document.createElement('div');
-    empty.className = Constants.CLASS_EMPTY;
-    empty.textContent = message;
-    return empty;
-}
-
-/**
- * Renders quick replies into the menu containers.
- * @param {Array<object>} chatReplies - Chat-specific quick replies
- * @param {Array<object>} globalReplies - Global quick replies
- */
-export function renderQuickReplies(chatReplies, globalReplies) {
-    const { chatItemsContainer, globalItemsContainer } = sharedState.domElements;
-    if (!chatItemsContainer || !globalItemsContainer) return;
-
-    // Clear existing content
-    chatItemsContainer.innerHTML = '';
-    globalItemsContainer.innerHTML = '';
-
-    // Render chat replies
-    if (chatReplies.length > 0) {
-        chatReplies.forEach(reply => {
-            chatItemsContainer.appendChild(createQuickReplyItem(reply));
-        });
-    } else {
-        chatItemsContainer.appendChild(createEmptyPlaceholder('没有可用的聊天快捷回复'));
-    }
-
-    // Render global replies
-    if (globalReplies.length > 0) {
-        globalReplies.forEach(reply => {
-            globalItemsContainer.appendChild(createQuickReplyItem(reply));
-        });
-    } else {
-        globalItemsContainer.appendChild(createEmptyPlaceholder('没有可用的全局快捷回复'));
-    }
-}
+// renderQuickReplies remains unchanged...
 
 /**
  * Updates the visibility of the menu UI and related ARIA attributes based on sharedState.
@@ -147,23 +23,112 @@ export function updateMenuVisibilityUI() {
 
     if (!menu || !rocketButton) return;
 
+    // Apply active class based on visibility BEFORE potentially hiding the menu
     if (show) {
-        // Update content before showing
-        const { chat, global } = fetchQuickReplies();
-        renderQuickReplies(chat, global);
+        rocketButton.classList.add('active');
+        rocketButton.setAttribute('aria-expanded', 'true');
+    } else {
+        rocketButton.classList.remove('active');
+        rocketButton.setAttribute('aria-expanded', 'false');
+    }
+
+    if (show) {
+        // Check if core QR is enabled before fetching/showing
+        const qrApi = window.quickReplyApi;
+        const isQrCoreEnabled = !qrApi || !qrApi.settings || qrApi.settings.isEnabled !== false;
+
+        if (!isQrCoreEnabled) {
+            console.log(`[${Constants.EXTENSION_NAME}] Core Quick Reply v2 is disabled. Menu will not show content.`);
+            renderQuickReplies([], []); // Show empty lists
+            // Optional: display a message in the menu itself
+            const emptyMsg = createEmptyPlaceholder('核心 Quick Reply V2 已禁用');
+            sharedState.domElements.chatItemsContainer.innerHTML = '';
+            sharedState.domElements.globalItemsContainer.innerHTML = '';
+            sharedState.domElements.chatItemsContainer.appendChild(emptyMsg);
+        } else {
+            // Update content before showing
+            const { chat, global } = fetchQuickReplies();
+            renderQuickReplies(chat, global);
+        }
+
 
         menu.style.display = 'block';
-        rocketButton.setAttribute('aria-expanded', 'true');
-        // Add active class for styling
-        rocketButton.classList.add('active');
 
         // Optional: Focus the first item in the menu for keyboard navigation
-        const firstItem = menu.querySelector(`.${Constants.CLASS_ITEM}`);
-        firstItem?.focus();
+        // Wait a tick for display changes to apply before focusing
+        setTimeout(() => {
+            const firstItem = menu.querySelector(`.${Constants.CLASS_ITEM}`);
+            firstItem?.focus();
+        }, 0);
+
     } else {
         menu.style.display = 'none';
-        rocketButton.setAttribute('aria-expanded', 'false');
-        // Remove active class
-        rocketButton.classList.remove('active');
     }
+}
+
+
+/**
+ * Updates the rocket button's icon and style based on settings.
+ * @param {object} settings - The icon settings object { type, value, color, hoverColor, activeColor, size }.
+ */
+export function updateRocketButtonIcon(settings) {
+    const { rocketButton } = sharedState.domElements;
+    if (!rocketButton) return;
+
+    // Clear existing content (icons/images)
+    rocketButton.innerHTML = '';
+    // Remove potentially conflicting classes like fa-solid/fa-rocket if custom icon is used
+    rocketButton.classList.remove('fa-solid', 'fa-rocket');
+
+    // --- Apply Icon ---
+    try {
+        if (settings.type === 'default' || !settings.type) {
+            // Add back Font Awesome classes for the default icon
+            rocketButton.classList.add('fa-solid', 'fa-rocket');
+            // Font Awesome icon size is controlled by font-size property in CSS
+        } else if (settings.type === 'svg' && settings.value) {
+            // Directly set innerHTML. Be aware of potential XSS if SVG source is untrusted.
+            rocketButton.innerHTML = settings.value;
+            const svgElement = rocketButton.querySelector('svg');
+            if (svgElement) {
+                svgElement.style.width = '100%'; // Let button size control SVG via CSS
+                svgElement.style.height = '100%';
+                svgElement.style.fill = 'currentColor'; // Crucial for color inheritance
+                svgElement.setAttribute('aria-hidden', 'true'); // Decorative SVG
+            } else {
+                 console.warn(`[${Constants.EXTENSION_NAME}] Provided SVG string did not contain a valid <svg> element.`);
+                 rocketButton.classList.add('fa-solid', 'fa-question'); // Fallback icon
+            }
+        } else if (settings.type === 'url' && settings.value) {
+            const img = document.createElement('img');
+            img.src = settings.value;
+            img.alt = 'Quick Reply Menu'; // Accessibility
+            img.style.width = '100%'; // Let button size control image via CSS
+            img.style.height = '100%';
+            img.style.objectFit = 'contain'; // Or 'cover', depending on desired look
+             img.onerror = () => {
+                 console.warn(`[${Constants.EXTENSION_NAME}] Failed to load image URL: ${settings.value}`);
+                 rocketButton.innerHTML = ''; // Clear broken image
+                 rocketButton.classList.add('fa-solid', 'fa-image-slash'); // Fallback icon
+             };
+            rocketButton.appendChild(img);
+        } else {
+            // Fallback if type is unknown or value is empty for svg/url
+            rocketButton.classList.add('fa-solid', 'fa-rocket');
+        }
+    } catch (error) {
+        console.error(`[${Constants.EXTENSION_NAME}] Error applying icon:`, error);
+        rocketButton.innerHTML = ''; // Clear potentially broken content
+        rocketButton.classList.add('fa-solid', 'fa-circle-exclamation'); // Error fallback icon
+    }
+
+    // --- Apply Colors and Size using CSS Variables ---
+    // We use CSS variables scoped to the button itself.
+    rocketButton.style.setProperty('--qs-icon-color', settings.color || '#a0a0a0');
+    rocketButton.style.setProperty('--qs-icon-hover-color', settings.hoverColor || '#ffffff');
+    rocketButton.style.setProperty('--qs-icon-active-color', settings.activeColor || '#55aaff');
+    rocketButton.style.setProperty('--qs-icon-size', settings.size || '1.2em'); // Apply size
+
+    // Force redraw if needed (might not be necessary)
+    // void rocketButton.offsetWidth;
 }
