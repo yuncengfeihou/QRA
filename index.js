@@ -4,6 +4,7 @@ import { sharedState } from './state.js';
 import { createMenuElement } from './ui.js';
 import { createSettingsHtml } from './settings.js';
 import { setupEventListeners, handleQuickReplyClick } from './events.js';
+import { handleSettingsChange } from './settings.js';
 
 // 创建本地设置对象，如果全局对象不存在
 if (typeof window.extension_settings === 'undefined') {
@@ -175,7 +176,8 @@ function initializePlugin() {
 
         // 创建全局对象暴露事件处理函数
         window.quickReplyMenu = {
-            handleQuickReplyClick
+            handleQuickReplyClick,
+            handleSettingsChange // 添加设置变更处理函数到全局对象
         };
 
         // Append menu to the body
