@@ -2,12 +2,12 @@
 import { extension_settings } from "../../../extensions.js";
 import * as Constants from './constants.js';
 import { sharedState } from './state.js';
-import { createMenuElement, updateMenuVisibilityUI } from './ui.js'; // Import updateMenuVisibilityUI
-import { createSettingsHtml, loadAndApplySettings } from './settings.js';
+import { createMenuElement, updateRocketButtonIcon } from './ui.js'; // Import updateRocketButtonIcon
+import { createSettingsHtml, createIconSettingsModalHtml, loadAndApplySettings } from './settings.js'; // Import icon modal html creator
 import { setupEventListeners } from './events.js';
 
 /**
- * Injects the rocket button next to the send button, applying the correct icon from settings.
+ * Injects the rocket button next to the send button
  * @returns {HTMLElement|null} The created rocket button or null if send button wasn't found
  */
 function injectRocketButton() {
@@ -17,66 +17,12 @@ function injectRocketButton() {
         return null;
     }
 
-    // Create the container div for the button
-    const buttonDiv = document.createElement('div');
-    buttonDiv.id = Constants.ID_ROCKET_BUTTON;
-    buttonDiv.className = 'interactable secondary-button'; // Keep interactable for styling/events
-    buttonDiv.title = "快速回复菜单";
-    buttonDiv.setAttribute('aria-haspopup', 'true');
-    buttonDiv.setAttribute('aria-expanded', 'false');
-    buttonDiv.setAttribute('aria-controls', Constants.ID_MENU);
+    // Create the button container, initially empty. Icon added by updateRocketButtonIcon.
+    const rocketButtonHtml = `<div id="${Constants.ID_ROCKET_BUTTON}" class="interactable secondary-button" title="快速回复菜单" aria-haspopup="true" aria-expanded="false" aria-controls="${Constants.ID_MENU}"></div>`; // Removed fa-rocket here
 
-    // Insert the container before the send button
-    sendButton.before(buttonDiv);
-
-    // Apply the icon based on settings (will be called again later to ensure it's correct)
-    updateRocketButtonIcon(buttonDiv); // Pass the element directly
-
-    return buttonDiv; // Return the reference to the container div
+    sendButton.before(rocketButtonHtml);
+    return document.getElementById(Constants.ID_ROCKET_BUTTON);
 }
-
-/**
- * Updates the content (icon) of the rocket button based on current settings.
- * @param {HTMLElement | null} [buttonElement] - Optional. The button element to update. Defaults to sharedState.
- */
-export function updateRocketButtonIcon(buttonElement = null) {
-    const button = buttonElement || sharedState.domElements.rocketButton;
-    if (!button) return;
-
-    const iconType = extension_settings[Constants.EXTENSION_NAME]?.iconType || 'default';
-    const iconData = extension_settings[Constants.EXTENSION_NAME]?.iconData || '';
-
-    // Clear previous content and classes related to icons
-    button.innerHTML = '';
-    button.classList.remove('custom-svg-icon', 'custom-png-icon', 'default-icon', 'fa-solid', 'fa-rocket'); // Clean up old classes
-
-    if (iconType === 'svg' && iconData) {
-        button.classList.add('custom-svg-icon');
-        // Directly injecting SVG. Ensure it's reasonably safe for your context.
-        // Basic sanitization: remove script tags (very basic, not foolproof)
-        const sanitizedSvg = iconData.replace(/<script[\s\S]*?<\/script>/gi, '');
-        button.innerHTML = sanitizedSvg;
-        // Attempt to set width/height from SVG attributes if not set via CSS
-        const svgElement = button.querySelector('svg');
-        if (svgElement && !svgElement.getAttribute('width') && !svgElement.getAttribute('height')) {
-             // Optional: Set a default size if SVG lacks dimensions
-             // svgElement.setAttribute('width', '1em');
-             // svgElement.setAttribute('height', '1em');
-        }
-    } else if (iconType === 'png' && iconData) {
-        button.classList.add('custom-png-icon');
-        const img = document.createElement('img');
-        img.src = iconData;
-        img.alt = "Menu Icon"; // Accessibility
-        button.appendChild(img);
-    } else { // Default icon
-        button.classList.add('default-icon', 'fa-solid', 'fa-rocket');
-        // Font Awesome might be added purely by class, or might need explicit element/pseudo-element
-        // If just classes work, this is enough. If not, might need <i> or similar.
-        // The provided CSS uses #ID so the class approach should work if FA is loaded globally.
-    }
-}
-
 
 /**
  * Initializes the plugin: creates UI, sets up listeners, loads settings.
@@ -84,35 +30,47 @@ export function updateRocketButtonIcon(buttonElement = null) {
 function initializePlugin() {
     console.log(`[${Constants.EXTENSION_NAME}] Initializing...`);
 
-    // Create and inject the rocket button container
-    const rocketButton = injectRocketButton(); // This now also applies the initial icon
+    // 1. Create and inject the rocket button (structure only)
+    const rocketButton = injectRocketButton();
 
-    // Create menu element
+    // 2. Create menu element
     const menu = createMenuElement();
 
-    // Store references in shared state
+    // 3. Create icon settings modal (hidden initially)
+    const iconSettingsModalHtml = createIconSettingsModalHtml();
+    document.body.insertAdjacentHTML('beforeend', iconSettingsModalHtml); // Append modal HTML to body
+
+    // 4. Store references in shared state
     sharedState.domElements.rocketButton = rocketButton;
     sharedState.domElements.menu = menu;
     sharedState.domElements.chatItemsContainer = menu.querySelector(`#${Constants.ID_CHAT_ITEMS}`);
     sharedState.domElements.globalItemsContainer = menu.querySelector(`#${Constants.ID_GLOBAL_ITEMS}`);
-    // Note: settingsDropdown is now found and listener added within loadAndApplySettings
+    sharedState.domElements.settingsDropdown = document.getElementById(Constants.ID_SETTINGS_ENABLED_DROPDOWN); // Get after settings HTML is added
+    // --- Get references for icon settings modal elements ---
+    sharedState.domElements.customizeIconButton = document.getElementById(Constants.ID_CUSTOMIZE_ICON_BUTTON);
+    sharedState.domElements.iconSettingsModal = document.getElementById(Constants.ID_ICON_SETTINGS_MODAL);
+    sharedState.domElements.iconSettingsBackdrop = sharedState.domElements.iconSettingsModal?.querySelector(`.${Constants.CLASS_ICON_SETTINGS_BACKDROP}`);
+    sharedState.domElements.iconTypeSelect = document.getElementById(Constants.ID_ICON_TYPE_SELECT);
+    sharedState.domElements.iconSvgInputContainer = document.getElementById(Constants.ID_ICON_SVG_INPUT_CONTAINER);
+    sharedState.domElements.iconSvgInput = document.getElementById(Constants.ID_ICON_SVG_INPUT);
+    sharedState.domElements.iconUrlInputContainer = document.getElementById(Constants.ID_ICON_URL_INPUT_CONTAINER);
+    sharedState.domElements.iconUrlInput = document.getElementById(Constants.ID_ICON_URL_INPUT);
+    sharedState.domElements.iconSettingsSaveButton = document.getElementById(Constants.ID_ICON_SETTINGS_SAVE);
+    sharedState.domElements.iconSettingsCloseButton = document.getElementById(Constants.ID_ICON_SETTINGS_CLOSE);
+    sharedState.domElements.iconPreview = document.getElementById(Constants.ID_ICON_PREVIEW);
+    sharedState.domElements.iconColorPicker = document.getElementById(Constants.ID_ICON_COLOR_PICKER);
+    sharedState.domElements.iconHoverColorPicker = document.getElementById(Constants.ID_ICON_HOVER_COLOR_PICKER);
+    sharedState.domElements.iconActiveColorPicker = document.getElementById(Constants.ID_ICON_ACTIVE_COLOR_PICKER);
 
-    // Append menu to the body
+
+    // 5. Append menu to the body
     document.body.appendChild(menu);
 
-    // Load initial settings state and apply it (this now also adds settings listeners)
+    // 6. Load initial settings state and apply it (this will now also call updateRocketButtonIcon)
     loadAndApplySettings();
 
-    // Apply initial icon state (redundant if injectRocketButton worked, but safe)
-    updateRocketButtonIcon();
-
-     // Apply initial visibility based on enabled state
-     if (extension_settings[Constants.EXTENSION_NAME].enabled === false && rocketButton) {
-        rocketButton.style.display = 'none';
-     }
-
-    // Setup general event listeners (like button click, outside click)
-    setupEventListeners(); // Ensure this doesn't re-add settings listeners
+    // 7. Setup event listeners (including new ones for icon settings)
+    setupEventListeners();
 
     console.log(`[${Constants.EXTENSION_NAME}] Initialization complete.`);
 }
@@ -124,10 +82,10 @@ jQuery(async () => {
     extension_settings[Constants.EXTENSION_NAME] = extension_settings[Constants.EXTENSION_NAME] || {};
 
     // 2. Add settings panel HTML to the UI
-    //    (This needs to happen before initializePlugin tries to find elements within it)
+    //    (This needs to happen before initializePlugin tries to find the dropdown and customize button)
     $('#extensions_settings').append(createSettingsHtml());
 
     // 3. Initialize the core plugin logic
-    //    (Creates elements, loads settings, sets listeners including new icon ones via loadAndApplySettings)
+    //    (This will create elements, find elements, load settings, apply icon, and set listeners)
     initializePlugin();
 });
