@@ -1,5 +1,4 @@
 // settings.js
-import { extension_settings } from "./index.js"; 
 import * as Constants from './constants.js';
 import { sharedState, setMenuVisible } from './state.js';
 import { updateMenuVisibilityUI } from './ui.js';
@@ -9,7 +8,7 @@ function updateIconDisplay() {
     const button = sharedState.domElements.rocketButton;
     if (!button) return;
     
-    const settings = extension_settings[Constants.EXTENSION_NAME];
+    const settings = window.extension_settings[Constants.EXTENSION_NAME];
     const iconType = settings.iconType || Constants.ICON_TYPES.ROCKET;
     
     // 清除按钮内容
