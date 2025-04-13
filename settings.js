@@ -28,6 +28,10 @@ function updateIconDisplay() {
             if (svgElement) {
                 svgElement.style.width = '20px';
                 svgElement.style.height = '20px';
+                // 确保SVG正确显示
+                svgElement.setAttribute('width', '20px');
+                svgElement.setAttribute('height', '20px');
+                svgElement.style.display = 'inline-block';
             }
         } 
         else if (customContent.startsWith('data:') || 
@@ -135,7 +139,7 @@ export function createSettingsHtml() {
                                placeholder="支持URL、base64编码图片或SVG代码" />
                         <input type="file" id="icon-file-upload" accept="image/*" style="display:none" />
                         <button class="menu_button" style="width:auto;padding:0 10px;" 
-                                onclick="document.getElementById('icon-file-upload').click()">
+                                id="icon-file-button">
                             选择文件
                         </button>
                     </div>
@@ -179,6 +183,10 @@ function updateIconPreview(iconType) {
             if (svgElement) {
                 svgElement.style.width = '20px';
                 svgElement.style.height = '20px';
+                // 确保SVG正确显示
+                svgElement.setAttribute('width', '20px');
+                svgElement.setAttribute('height', '20px');
+                svgElement.style.display = 'inline-block';
             }
         } 
         else if (customContent.startsWith('data:') || 
@@ -322,6 +330,14 @@ export function setupSettingsEventListeners() {
     const fileUpload = document.getElementById('icon-file-upload');
     if (fileUpload) {
         fileUpload.addEventListener('change', handleFileUpload);
+    }
+    
+    // 文件选择按钮点击事件
+    const fileButton = document.getElementById('icon-file-button');
+    if (fileButton) {
+        fileButton.addEventListener('click', function() {
+            document.getElementById('icon-file-upload')?.click();
+        });
     }
 }
 
