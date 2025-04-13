@@ -2,7 +2,7 @@
 import { extension_settings } from "../../../extensions.js";
 import * as Constants from './constants.js';
 import { sharedState, setMenuVisible } from './state.js';
-import { updateMenuVisibilityUI, updateIconDisplay } from './ui.js'; // 导入新的函数
+import { updateMenuVisibilityUI, updateIconDisplay } from './ui.js'; 
 
 /**
  * Creates the HTML for the settings panel.
@@ -60,77 +60,70 @@ export function createSettingsHtml() {
     </div>`;
 }
 
-// Debounce function (simple version)
-let saveTimeout;
-function saveSettingsDebounced() {
-    clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(() => {
-        console.log(`[${Constants.EXTENSION_NAME}] (Debounced) Settings saved.`);
-        if (typeof context !== 'undefined' && context.saveExtensionSettings) {
-            context.saveExtensionSettings();
+// 统一处理设置变更的函数
+export function handleSettingsChange(event) {
+    const target = event.target;
+    const settings = extension_settings[Constants.EXTENSION_NAME];
+    
+    // 根据设置类型处理
+    if (target.id === Constants.ID_SETTINGS_ENABLED_DROPDOWN) {
+        const isEnabled = target.value === 'true';
+        settings.enabled = isEnabled;
+        
+        if (sharedState.domElements.rocketButton) {
+            sharedState.domElements.rocketButton.style.display = isEnabled ? '' : 'none';
         }
-    }, 500);
-}
-
-/**
- * 处理图标类型更改
- * @param {Event} event 
- */
-export function handleIconTypeChange(event) {
-    const iconType = event.target.value;
-    const settings = extension_settings[Constants.EXTENSION_NAME];
-    settings.iconType = iconType;
-    
-    // 显示或隐藏自定义图标URL输入框
-    const customIconContainer = document.querySelector('.custom-icon-container');
-    if (customIconContainer) {
-        customIconContainer.style.display = iconType === Constants.ICON_TYPES.CUSTOM ? 'flex' : 'none';
+        if (!isEnabled) {
+            setMenuVisible(false);
+            updateMenuVisibilityUI();
+        }
+        console.log(`[${Constants.EXTENSION_NAME}] Enabled status set to: ${isEnabled}`);
+    } 
+    else if (target.id === Constants.ID_ICON_TYPE_DROPDOWN) {
+        const iconType = target.value;
+        settings.iconType = iconType;
+        
+        // 显示或隐藏自定义图标URL输入框
+        const customIconContainer = document.querySelector('.custom-icon-container');
+        if (customIconContainer) {
+            customIconContainer.style.display = iconType === Constants.ICON_TYPES.CUSTOM ? 'flex' : 'none';
+        }
+        
+        // 更新图标预览
+        updateIconPreview(iconType);
+    } 
+    else if (target.id === Constants.ID_CUSTOM_ICON_URL) {
+        const url = target.value;
+        settings.customIconUrl = url;
+        
+        // 如果当前是自定义图标模式，更新预览
+        if (settings.iconType === Constants.ICON_TYPES.CUSTOM) {
+            updateIconPreview(Constants.ICON_TYPES.CUSTOM);
+        }
+    } 
+    else if (target.id === Constants.ID_COLOR_MATCH_CHECKBOX) {
+        const isMatched = target.checked;
+        settings.matchButtonColors = isMatched;
     }
     
-    // 更新图标预览
-    updateIconPreview(iconType);
-    
-    // 应用到实际按钮
+    // 更新图标显示
     updateIconDisplay();
     
-    saveSettingsDebounced();
+    // 保存设置
+    saveSettings();
 }
 
-/**
- * 处理自定义图标URL更改
- * @param {Event} event 
- */
-export function handleCustomIconUrlChange(event) {
-    const url = event.target.value;
-    const settings = extension_settings[Constants.EXTENSION_NAME];
-    settings.customIconUrl = url;
-    
-    // 如果当前是自定义图标模式，立即更新显示
-    if (settings.iconType === Constants.ICON_TYPES.CUSTOM) {
-        updateIconDisplay();
+// 保存设置
+function saveSettings() {
+    if (typeof context !== 'undefined' && context.saveExtensionSettings) {
+        context.saveExtensionSettings();
+    } else {
+        console.log(`[${Constants.EXTENSION_NAME}] 设置已更新（模拟保存）`);
     }
-    
-    saveSettingsDebounced();
-}
-
-/**
- * 处理颜色匹配选项更改
- * @param {Event} event 
- */
-export function handleColorMatchChange(event) {
-    const isMatched = event.target.checked;
-    const settings = extension_settings[Constants.EXTENSION_NAME];
-    settings.matchButtonColors = isMatched;
-    
-    // 更新样式
-    updateIconDisplay();
-    
-    saveSettingsDebounced();
 }
 
 /**
  * 更新图标预览
- * @param {string} iconType 图标类型
  */
 function updateIconPreview(iconType) {
     const previewContainer = document.querySelector(`.${Constants.CLASS_ICON_PREVIEW}`);
@@ -155,40 +148,10 @@ function updateIconPreview(iconType) {
 }
 
 /**
- * Handles changes in the extension's enabled setting dropdown.
- * @param {Event} event
- */
-export function handleSettingsChange(event) {
-    const target = event.target;
-    
-    if (target.id === Constants.ID_SETTINGS_ENABLED_DROPDOWN) {
-        const isEnabled = target.value === 'true';
-        extension_settings[Constants.EXTENSION_NAME].enabled = isEnabled;
-    
-        if (sharedState.domElements.rocketButton) {
-            sharedState.domElements.rocketButton.style.display = isEnabled ? '' : 'none';
-        }
-        if (!isEnabled) {
-            setMenuVisible(false); // Update state
-            updateMenuVisibilityUI(); // Update UI based on new state
-        }
-        console.log(`[${Constants.EXTENSION_NAME}] Enabled status set to: ${isEnabled}`);
-    } else if (target.id === Constants.ID_ICON_TYPE_DROPDOWN) {
-        handleIconTypeChange(event);
-    } else if (target.id === Constants.ID_CUSTOM_ICON_URL) {
-        handleCustomIconUrlChange(event);
-    } else if (target.id === Constants.ID_COLOR_MATCH_CHECKBOX) {
-        handleColorMatchChange(event);
-    }
-    
-    saveSettingsDebounced();
-}
-
-/**
  * Loads initial settings and applies them.
  */
 export function loadAndApplySettings() {
-     // Ensure settings object exists with default values
+    // 确保设置对象存在并设置默认值
     const settings = extension_settings[Constants.EXTENSION_NAME] = extension_settings[Constants.EXTENSION_NAME] || {};
     
     // 设置默认值
@@ -197,7 +160,7 @@ export function loadAndApplySettings() {
     settings.customIconUrl = settings.customIconUrl || ''; // 默认空URL
     settings.matchButtonColors = settings.matchButtonColors !== false; // 默认匹配颜色
 
-    // Apply initial state to UI elements
+    // 应用设置到UI元素
     const dropdown = sharedState.domElements.settingsDropdown;
     if (dropdown) {
         dropdown.value = String(settings.enabled);
@@ -207,9 +170,12 @@ export function loadAndApplySettings() {
     const iconTypeDropdown = document.getElementById(Constants.ID_ICON_TYPE_DROPDOWN);
     if (iconTypeDropdown) {
         iconTypeDropdown.value = settings.iconType;
-        // 触发一次变更事件来显示/隐藏自定义URL输入框
-        const event = new Event('change');
-        iconTypeDropdown.dispatchEvent(event);
+        
+        // 显示或隐藏自定义图标URL输入框
+        const customIconContainer = document.querySelector('.custom-icon-container');
+        if (customIconContainer) {
+            customIconContainer.style.display = settings.iconType === Constants.ICON_TYPES.CUSTOM ? 'flex' : 'none';
+        }
     }
     
     // 设置自定义图标URL
@@ -227,6 +193,7 @@ export function loadAndApplySettings() {
     // 更新图标预览
     updateIconPreview(settings.iconType);
     
+    // 如果禁用则隐藏按钮
     if (!settings.enabled && sharedState.domElements.rocketButton) {
         sharedState.domElements.rocketButton.style.display = 'none';
     }
