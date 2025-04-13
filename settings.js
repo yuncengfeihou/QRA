@@ -1,8 +1,8 @@
 // settings.js
-import { extension_settings } from "../../../extensions.js";
+import { extension_settings } from "./index.js";
 import * as Constants from './constants.js';
 import { sharedState, setMenuVisible } from './state.js';
-import { updateMenuVisibilityUI, updateIconDisplay } from './ui.js'; 
+import { updateMenuVisibilityUI } from './ui.js';
 
 /**
  * Creates the HTML for the settings panel.
