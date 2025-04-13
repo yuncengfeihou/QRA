@@ -2,9 +2,8 @@
 import * as Constants from './constants.js';
 import { sharedState } from './state.js';
 import { createMenuElement } from './ui.js';
-import { createSettingsHtml } from './settings.js';
+import { createSettingsHtml, setupSettingsEventListeners } from './settings.js';
 import { setupEventListeners, handleQuickReplyClick } from './events.js';
-import { handleFileUpload } from './settings.js';  // 导入handleFileUpload函数
 
 // 创建本地设置对象，如果全局对象不存在
 if (typeof window.extension_settings === 'undefined') {
@@ -18,6 +17,7 @@ if (!window.extension_settings[Constants.EXTENSION_NAME]) {
         matchButtonColors: true
     };
 }
+
 
 
 /**
@@ -196,6 +196,32 @@ function initializePlugin() {
     } catch (err) {
         console.error(`[${Constants.EXTENSION_NAME}] 初始化失败:`, err);
     }
+}
+
+// 导出handleFileUpload函数，供onReady回调使用
+export function handleFileUpload(event) {
+    // ... 之前的handleFileUpload实现 ...
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const customIconUrl = document.getElementById(Constants.ID_CUSTOM_ICON_URL);
+        if (customIconUrl) {
+            customIconUrl.value = e.target.result; // 将文件转为base64
+            
+            // 更新设置
+            const settings = window.extension_settings[Constants.EXTENSION_NAME];
+            settings.customIconUrl = e.target.result;
+            
+            // 手动触发输入事件
+            const inputEvent = new Event('input', { bubbles: true });
+            customIconUrl.dispatchEvent(inputEvent);
+            
+            console.log(`[${Constants.EXTENSION_NAME}] 图标文件已上传并应用`);
+        }
+    };
+    reader.readAsDataURL(file);
 }
 
 // 确保 jQuery 可用 - 使用原生 js 备用
