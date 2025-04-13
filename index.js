@@ -2,7 +2,7 @@
 import { extension_settings } from "../../../extensions.js";
 import * as Constants from './constants.js';
 import { sharedState } from './state.js';
-import { createMenuElement } from './ui.js';
+import { createMenuElement, updateIconDisplay } from './ui.js';
 import { createSettingsHtml, loadAndApplySettings } from './settings.js';
 import { setupEventListeners } from './events.js';
 
@@ -18,11 +18,11 @@ function injectRocketButton() {
         return null;
     }
     
-    // Create the rocket button HTML
-    const rocketButtonHtml = `<div id="${Constants.ID_ROCKET_BUTTON}" class="fa-solid fa-rocket interactable secondary-button" title="快速回复菜单" aria-haspopup="true" aria-expanded="false" aria-controls="${Constants.ID_MENU}"></div>`;
+    // 创建按钮容器，最初不包含任何图标内容，将在updateIconDisplay中填充
+    const buttonHtml = `<div id="${Constants.ID_ROCKET_BUTTON}" class="interactable secondary-button" title="快速回复菜单" aria-haspopup="true" aria-expanded="false" aria-controls="${Constants.ID_MENU}"></div>`;
     
-    // Insert the rocket button before the send button
-    sendButton.before(rocketButtonHtml);
+    // Insert the button before the send button
+    sendButton.before(buttonHtml);
     
     // Return the reference to the newly created button
     return document.getElementById(Constants.ID_ROCKET_BUTTON);
@@ -45,7 +45,10 @@ function initializePlugin() {
     sharedState.domElements.menu = menu;
     sharedState.domElements.chatItemsContainer = menu.querySelector(`#${Constants.ID_CHAT_ITEMS}`);
     sharedState.domElements.globalItemsContainer = menu.querySelector(`#${Constants.ID_GLOBAL_ITEMS}`);
-    sharedState.domElements.settingsDropdown = document.getElementById(Constants.ID_SETTINGS_ENABLED_DROPDOWN); // Get after settings HTML is added
+    sharedState.domElements.settingsDropdown = document.getElementById(Constants.ID_SETTINGS_ENABLED_DROPDOWN);
+    sharedState.domElements.iconTypeDropdown = document.getElementById(Constants.ID_ICON_TYPE_DROPDOWN);
+    sharedState.domElements.customIconUrl = document.getElementById(Constants.ID_CUSTOM_ICON_URL);
+    sharedState.domElements.colorMatchCheckbox = document.getElementById(Constants.ID_COLOR_MATCH_CHECKBOX);
 
     // Append menu to the body
     document.body.appendChild(menu);
