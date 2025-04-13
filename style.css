@@ -4,25 +4,27 @@
     overflow: hidden !important;
 }
 
-/* --- 火箭按钮 --- */
+/* --- 快捷回复按钮 --- */
 #quick-reply-rocket-button {
-    color: #a0a0a0; /* 默认颜色：灰色 */
+    color: var(--button-text-color, #a0a0a0); /* 使用变量或默认为灰色 */
     font-size: 1.2em; /* 图标大小 */
     line-height: var(--buttons-bar-height); /* 行高与按钮栏一致 */
     height: var(--buttons-bar-height);      /* 高度与按钮栏一致 */
     display: flex;         /* 使用 Flexbox 布局 */
     align-items: center;   /* 垂直居中图标 */
+    justify-content: center; /* 水平居中 */
     margin-right: 4px;     /* 右边距 */
     cursor: pointer;       /* 鼠标样式：手型 */
-    transition: color 0.2s;/* 颜色变化过渡效果 */
+    transition: all 0.2s;  /* 过渡效果 */
+    width: 32px;          /* 固定宽度 */
 }
 
 #quick-reply-rocket-button:hover {
-    color: #ffffff; /* 鼠标悬停时颜色：白色 */
+    color: var(--button-text-hover-color, #ffffff); /* 使用变量或默认为白色 */
 }
 
 #quick-reply-rocket-button.active {
-    color: #55aaff; /* 菜单打开时的颜色：蓝色 */
+    color: var(--button-text-active-color, #55aaff); /* 使用变量或默认为蓝色 */
 }
 
 /* 快速回复菜单容器 */
@@ -31,7 +33,7 @@
     position: fixed;
     left: 50%;
     top: 190px;
-    transform: translateX(-50%) translateY(10vh);
+    transform: translateX(-50%);
     z-index: 1001;
     background-color: rgba(0, 0, 0, 0.85);
     border: 1px solid #555;
@@ -41,6 +43,39 @@
     max-width: 80vw;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     transition: background-color 0.3s, border-color 0.3s;
+}
+
+/* 设置样式 */
+.quick-reply-settings-row {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    gap: 10px;
+}
+
+.quick-reply-settings-row label {
+    min-width: 100px;
+}
+
+.quick-reply-icon-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    margin-left: 10px;
+}
+
+.custom-icon-container {
+    display: flex;
+    align-items: center;
+    margin-top: 5px;
+}
+
+.custom-icon-container input {
+    flex-grow: 1;
 }
 
 /* 菜单布局 */
@@ -96,7 +131,7 @@
 
 /* 滚动条样式 */
 .quick-reply-list::-webkit-scrollbar {
-    width: 4.5px;
+    width: 6px;
 }
 
 .quick-reply-list::-webkit-scrollbar-track {
